@@ -3498,8 +3498,8 @@
         let currentTrafficRegion = 'seoul';
         let trafficRefreshInterval = null;
 
-        // Region coordinates for ITS API
-        const regionCoords = {
+        // Region coordinates for ITS Traffic API
+        const trafficRegionCoords = {
             seoul: { minX: 126.7, maxX: 127.2, minY: 37.4, maxY: 37.7 },
             gyeonggi: { minX: 126.0, maxX: 127.5, minY: 36.8, maxY: 37.8 },
             busan: { minX: 128.8, maxX: 129.3, minY: 35.0, maxY: 35.4 },
@@ -3517,7 +3517,7 @@
         // Load traffic incidents from ITS API
         function loadTrafficIncidents(region = 'seoul') {
             currentTrafficRegion = region;
-            const coords = regionCoords[region];
+            const coords = trafficRegionCoords[region];
             const apiUrl = `https://openapi.its.go.kr:9443/eventInfo?apiKey=${ITS_API_KEY}&type=all&eventType=all&getType=json&minX=${coords.minX}&maxX=${coords.maxX}&minY=${coords.minY}&maxY=${coords.maxY}`;
 
             // Update active button
@@ -3575,7 +3575,7 @@
 
         // Load traffic speed information
         function loadTrafficSpeeds() {
-            const coords = regionCoords['seoul']; // Always use Seoul for speed table
+            const coords = trafficRegionCoords['seoul']; // Always use Seoul for speed table
             const apiUrl = `https://openapi.its.go.kr:9443/trafficInfo?apiKey=${ITS_API_KEY}&type=all&getType=json&minX=${coords.minX}&maxX=${coords.maxX}&minY=${coords.minY}&maxY=${coords.maxY}`;
 
             fetch(apiUrl)
