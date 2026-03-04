@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>LIVE MONITOR v3.0</title>
 
     <!-- Google Fonts -->
@@ -2253,9 +2256,11 @@
             // Load initial earthquake data
             loadEarthquakeData();
 
-            // Load aircraft data
-            loadAircraftData();
-            setInterval(loadAircraftData, 60000); // Refresh every 60s
+            // Load aircraft data (deferred to avoid blocking initial render)
+            setTimeout(() => {
+                loadAircraftData();
+                setInterval(loadAircraftData, 120000); // Refresh every 2min
+            }, 5000);
         }
 
         // Add static conflict markers
@@ -2477,8 +2482,15 @@
             aircraftMarkers = [];
 
             // OpenSky Network free API - get military-related aircraft
-            // Bounding box: rough global view
-            fetch('https://opensky-network.org/api/states/all?lamin=-60&lomin=-180&lamax=80&lomax=180')
+            // Use smaller regional requests to reduce load
+            const regions = [
+                { name: 'Europe', lamin: 35, lomin: -10, lamax: 60, lomax: 40 },
+                { name: 'East Asia', lamin: 25, lomin: 120, lamax: 45, lomax: 145 },
+                { name: 'Middle East', lamin: 15, lomin: 30, lamax: 40, lomax: 60 },
+                { name: 'North America', lamin: 25, lomin: -130, lamax: 50, lomax: -60 }
+            ];
+            const region = regions[Math.floor(Math.random() * regions.length)];
+            fetch(`https://opensky-network.org/api/states/all?lamin=${region.lamin}&lomin=${region.lomin}&lamax=${region.lamax}&lomax=${region.lomax}`)
                 .then(response => {
                     if (!response.ok) throw new Error('OpenSky API unavailable');
                     return response.json();
@@ -2590,7 +2602,7 @@
 
                     // Add new markers
                     data.features.forEach(feature => {
-                        if (feature.properties.mag >= 5.5) {
+                        if (feature.properties.mag >= 2.5) {
                             const coords = feature.geometry.coordinates;
                             const mag = feature.properties.mag;
                             let color = '#22c55e'; // green <4
