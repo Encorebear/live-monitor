@@ -995,6 +995,264 @@
                 grid-template-columns: 1fr !important;
             }
         }
+
+        /* Real-time Traffic Features Styles */
+        .traffic-overview-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .traffic-overview-card {
+            background: linear-gradient(135deg, #111820 0%, #1a2332 100%);
+            border: 1px solid #1e2a36;
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .traffic-overview-icon {
+            font-size: 28px;
+            min-width: 45px;
+            text-align: center;
+        }
+        .traffic-overview-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .traffic-overview-label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .traffic-overview-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3b82f6;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Incident Feed Styles */
+        .traffic-incident-section {
+            margin-bottom: 16px;
+            background: #111820;
+            border: 1px solid #1e2a36;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 400px;
+        }
+        .traffic-incident-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #1e2a36;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .traffic-incident-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #3b82f6;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .traffic-region-selector {
+            display: flex;
+            gap: 4px;
+        }
+        .traffic-region-btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            border: 1px solid #1e2a36;
+            background: transparent;
+            color: #9ca3af;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .traffic-region-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .traffic-region-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        .traffic-incident-feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .traffic-incident-card {
+            background: #0d1117;
+            border: 1px solid #1e2a36;
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            font-size: 11px;
+        }
+        .traffic-incident-icon {
+            font-size: 18px;
+            min-width: 20px;
+            text-align: center;
+        }
+        .traffic-incident-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .traffic-incident-type {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+        .traffic-incident-road {
+            color: #e0e6ed;
+            font-weight: 600;
+            margin-bottom: 2px;
+            word-break: break-word;
+        }
+        .traffic-incident-msg {
+            color: #9ca3af;
+            margin-bottom: 2px;
+            word-break: break-word;
+        }
+        .traffic-incident-time {
+            color: #6b7280;
+            font-size: 10px;
+        }
+        .traffic-incident-card.type-사고 {
+            border-left: 3px solid #ef4444;
+        }
+        .traffic-incident-card.type-공사 {
+            border-left: 3px solid #f97316;
+        }
+        .traffic-incident-card.type-기상 {
+            border-left: 3px solid #0ea5e9;
+        }
+        .traffic-incident-card.type-기타 {
+            border-left: 3px solid #6b7280;
+        }
+        .traffic-incident-empty {
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        /* Speed Table Styles */
+        .traffic-speed-section {
+            margin-bottom: 16px;
+            background: #111820;
+            border: 1px solid #1e2a36;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 350px;
+        }
+        .traffic-speed-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #1e2a36;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .traffic-speed-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #3b82f6;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .traffic-speed-table {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .traffic-speed-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 10px;
+            padding: 8px;
+            border-bottom: 1px solid #1e2a36;
+            font-size: 11px;
+            align-items: center;
+        }
+        .traffic-speed-row:last-child {
+            border-bottom: none;
+        }
+        .traffic-speed-road {
+            color: #e0e6ed;
+            font-weight: 500;
+            word-break: break-word;
+            min-width: 0;
+        }
+        .traffic-speed-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            text-align: center;
+            min-width: 50px;
+        }
+        .traffic-speed-status {
+            text-align: center;
+            min-width: 40px;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-weight: 600;
+            font-size: 10px;
+        }
+        .traffic-speed-status.smooth {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        .traffic-speed-status.caution {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+        }
+        .traffic-speed-status.congested {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        .traffic-speed-empty {
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        /* Update timestamp */
+        .traffic-last-updated {
+            font-size: 10px;
+            color: #6b7280;
+            text-align: right;
+            padding: 0 16px 8px;
+        }
+
+        /* Loading indicator */
+        .traffic-loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
@@ -1311,8 +1569,63 @@
                 <!-- Sub-content 1: Traffic Dashboard -->
                 <div id="cctv-sub-traffic" class="cctv-sub-content">
                     <div style="flex:1;overflow-y:auto;padding:16px;">
+                        <!-- Traffic Overview Dashboard -->
+                        <div class="traffic-overview-bar">
+                            <div class="traffic-overview-card">
+                                <div class="traffic-overview-icon">🚨</div>
+                                <div class="traffic-overview-content">
+                                    <div class="traffic-overview-label">돌발정보</div>
+                                    <div class="traffic-overview-value" id="traffic-incident-count">-</div>
+                                </div>
+                            </div>
+                            <div class="traffic-overview-card">
+                                <div class="traffic-overview-icon">📊</div>
+                                <div class="traffic-overview-content">
+                                    <div class="traffic-overview-label">평균 속도</div>
+                                    <div class="traffic-overview-value" id="traffic-avg-speed" style="color:#22c55e;">- km/h</div>
+                                </div>
+                            </div>
+                            <div class="traffic-overview-card">
+                                <div class="traffic-overview-icon" id="traffic-status-icon">🟢</div>
+                                <div class="traffic-overview-content">
+                                    <div class="traffic-overview-label">소통 상태</div>
+                                    <div class="traffic-overview-value" id="traffic-congestion-status" style="font-size:14px;">원활</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Incident Feed -->
+                        <div class="traffic-incident-section">
+                            <div class="traffic-incident-header">
+                                <span class="traffic-incident-title">🚨 실시간 돌발정보</span>
+                                <div class="traffic-region-selector">
+                                    <button class="traffic-region-btn active" data-region="seoul" onclick="loadTrafficIncidents('seoul')">서울</button>
+                                    <button class="traffic-region-btn" data-region="gyeonggi" onclick="loadTrafficIncidents('gyeonggi')">경기</button>
+                                    <button class="traffic-region-btn" data-region="busan" onclick="loadTrafficIncidents('busan')">부산</button>
+                                    <button class="traffic-region-btn" data-region="all" onclick="loadTrafficIncidents('all')">전국</button>
+                                </div>
+                            </div>
+                            <div class="traffic-incident-feed" id="traffic-incident-feed">
+                                <div class="traffic-incident-empty">로딩 중...</div>
+                            </div>
+                        </div>
+
+                        <!-- Major Roads Speed Table -->
+                        <div class="traffic-speed-section">
+                            <div class="traffic-speed-header">
+                                <span class="traffic-speed-title">⚡ 주요 도로 속도</span>
+                                <span style="font-size:11px;color:#6b7280;"><span class="traffic-loading"></span> 실시간</span>
+                            </div>
+                            <div class="traffic-speed-table" id="traffic-speed-table">
+                                <div class="traffic-speed-empty">로딩 중...</div>
+                            </div>
+                        </div>
+                        <div class="traffic-last-updated">
+                            마지막 업데이트: <span id="traffic-last-update-time">-</span>
+                        </div>
+
                         <!-- Google Maps Seoul with traffic embed -->
-                        <div style="margin-bottom:16px;background:#111820;border:1px solid #1e2a36;border-radius:8px;overflow:hidden;">
+                        <div style="margin-bottom:16px;background:#111820;border:1px solid #1e2a36;border-radius:8px;overflow:hidden;margin-top:16px;">
                             <div style="padding:10px 16px;border-bottom:1px solid #1e2a36;display:flex;align-items:center;justify-content:space-between;">
                                 <span style="font-size:13px;font-weight:700;color:#3b82f6;font-family:'JetBrains Mono',monospace;">🗺️ 서울 교통 지도 (Google Maps)</span>
                                 <a href="https://www.google.com/maps/@37.5665,126.978,12z/data=!5m1!1e1" target="_blank" style="color:#6b7280;font-size:11px;text-decoration:none;">새 창에서 열기 ↗</a>
@@ -3179,6 +3492,221 @@
                 grid.appendChild(div);
             });
         }
+
+        // ========== TRAFFIC FEATURES ==========
+        const ITS_API_KEY = 'bc06a5ac00de4f97861c779b00b35fe8';
+        let currentTrafficRegion = 'seoul';
+        let trafficRefreshInterval = null;
+
+        // Region coordinates for ITS API
+        const regionCoords = {
+            seoul: { minX: 126.7, maxX: 127.2, minY: 37.4, maxY: 37.7 },
+            gyeonggi: { minX: 126.0, maxX: 127.5, minY: 36.8, maxY: 37.8 },
+            busan: { minX: 128.8, maxX: 129.3, minY: 35.0, maxY: 35.4 },
+            all: { minX: 126.0, maxX: 128.0, minY: 35.0, maxY: 38.0 }
+        };
+
+        // Event type icons and colors
+        const eventTypeInfo = {
+            '사고': { icon: '🚗', color: '#ef4444' },
+            '공사': { icon: '🔧', color: '#f97316' },
+            '기상': { icon: '🌧️', color: '#0ea5e9' },
+            '기타': { icon: '⚠️', color: '#6b7280' }
+        };
+
+        // Load traffic incidents from ITS API
+        function loadTrafficIncidents(region = 'seoul') {
+            currentTrafficRegion = region;
+            const coords = regionCoords[region];
+            const apiUrl = `https://openapi.its.go.kr:9443/eventInfo?apiKey=${ITS_API_KEY}&type=all&eventType=all&getType=json&minX=${coords.minX}&maxX=${coords.maxX}&minY=${coords.minY}&maxY=${coords.maxY}`;
+
+            // Update active button
+            document.querySelectorAll('.traffic-region-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.region === region) btn.classList.add('active');
+            });
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const feed = document.getElementById('traffic-incident-feed');
+                    feed.innerHTML = '';
+
+                    if (!data.body || !data.body.items || data.body.items.length === 0) {
+                        feed.innerHTML = '<div class="traffic-incident-empty">돌발정보 없음</div>';
+                        document.getElementById('traffic-incident-count').textContent = '0';
+                        return;
+                    }
+
+                    const items = data.body.items.slice(0, 20); // Limit to 20 items
+                    document.getElementById('traffic-incident-count').textContent = data.body.totalCount;
+
+                    items.forEach(item => {
+                        const eventType = item.eventType || '기타';
+                        const info = eventTypeInfo[eventType] || eventTypeInfo['기타'];
+                        const typeClass = `type-${eventType}`;
+
+                        const card = document.createElement('div');
+                        card.className = `traffic-incident-card ${typeClass}`;
+
+                        const detailType = item.eventDetailType || '';
+                        const timeStr = formatIncidentTime(item.startDate);
+
+                        card.innerHTML = `
+                            <div class="traffic-incident-icon">${info.icon}</div>
+                            <div class="traffic-incident-body">
+                                <div class="traffic-incident-type" style="color: ${info.color};">${eventType}${detailType ? ' • ' + detailType : ''}</div>
+                                <div class="traffic-incident-road">${item.roadName || '도로명 미확인'}</div>
+                                <div class="traffic-incident-msg">${item.message || ''}</div>
+                                <div class="traffic-incident-time">${timeStr}</div>
+                            </div>
+                        `;
+                        feed.appendChild(card);
+                    });
+
+                    updateTrafficTimestamp();
+                })
+                .catch(error => {
+                    console.error('ITS 돌발정보 로드 실패:', error);
+                    const feed = document.getElementById('traffic-incident-feed');
+                    feed.innerHTML = '<div class="traffic-incident-empty">데이터 로드 실패</div>';
+                });
+        }
+
+        // Load traffic speed information
+        function loadTrafficSpeeds() {
+            const coords = regionCoords['seoul']; // Always use Seoul for speed table
+            const apiUrl = `https://openapi.its.go.kr:9443/trafficInfo?apiKey=${ITS_API_KEY}&type=all&getType=json&minX=${coords.minX}&maxX=${coords.maxX}&minY=${coords.minY}&maxY=${coords.maxY}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById('traffic-speed-table');
+                    table.innerHTML = '';
+
+                    if (!data.body || !data.body.items || data.body.items.length === 0) {
+                        table.innerHTML = '<div class="traffic-speed-empty">데이터 없음</div>';
+                        return;
+                    }
+
+                    // Sort by road name and limit to 15 items
+                    const items = data.body.items
+                        .sort((a, b) => (b.speed || 0) - (a.speed || 0))
+                        .slice(0, 15);
+
+                    let totalSpeed = 0;
+                    items.forEach(item => {
+                        const speed = item.speed || 0;
+                        totalSpeed += speed;
+
+                        const status = getSpeedStatus(speed);
+                        const statusClass = status.class;
+                        const statusText = status.text;
+
+                        const row = document.createElement('div');
+                        row.className = 'traffic-speed-row';
+                        row.innerHTML = `
+                            <div class="traffic-speed-road">${item.roadName || '도로명 미확인'}</div>
+                            <div class="traffic-speed-value">${speed.toFixed(1)}</div>
+                            <div class="traffic-speed-status ${statusClass}">${statusText}</div>
+                        `;
+                        table.appendChild(row);
+                    });
+
+                    // Update average speed
+                    const avgSpeed = Math.round(totalSpeed / items.length);
+                    const speedElement = document.getElementById('traffic-avg-speed');
+                    const statusIcon = document.getElementById('traffic-status-icon');
+                    const statusText = document.getElementById('traffic-congestion-status');
+
+                    speedElement.textContent = avgSpeed + ' km/h';
+
+                    if (avgSpeed > 40) {
+                        speedElement.style.color = '#22c55e';
+                        statusIcon.textContent = '🟢';
+                        statusText.textContent = '원활';
+                    } else if (avgSpeed > 20) {
+                        speedElement.style.color = '#eab308';
+                        statusIcon.textContent = '🟡';
+                        statusText.textContent = '보통';
+                    } else {
+                        speedElement.style.color = '#ef4444';
+                        statusIcon.textContent = '🔴';
+                        statusText.textContent = '혼잡';
+                    }
+
+                    updateTrafficTimestamp();
+                })
+                .catch(error => {
+                    console.error('ITS 교통정보 로드 실패:', error);
+                    const table = document.getElementById('traffic-speed-table');
+                    table.innerHTML = '<div class="traffic-speed-empty">데이터 로드 실패</div>';
+                });
+        }
+
+        // Get speed status
+        function getSpeedStatus(speed) {
+            if (speed > 40) {
+                return { class: 'smooth', text: '원활' };
+            } else if (speed > 20) {
+                return { class: 'caution', text: '보통' };
+            } else {
+                return { class: 'congested', text: '혼잡' };
+            }
+        }
+
+        // Format incident time
+        function formatIncidentTime(dateString) {
+            if (!dateString) return '시간 정보 없음';
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diff = now - date;
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+
+                if (minutes < 1) return '방금 전';
+                if (minutes < 60) return `${minutes}분 전`;
+                if (hours < 24) return `${hours}시간 전`;
+                if (days < 7) return `${days}일 전`;
+
+                return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return '시간 정보 없음';
+            }
+        }
+
+        // Update timestamp
+        function updateTrafficTimestamp() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('traffic-last-update-time').textContent = timeStr;
+        }
+
+        // Initialize traffic data on tab switch
+        function initializeTrafficData() {
+            loadTrafficIncidents('seoul');
+            loadTrafficSpeeds();
+
+            // Clear existing interval if any
+            if (trafficRefreshInterval) clearInterval(trafficRefreshInterval);
+
+            // Auto-refresh every 60 seconds
+            trafficRefreshInterval = setInterval(() => {
+                loadTrafficIncidents(currentTrafficRegion);
+                loadTrafficSpeeds();
+            }, 60000);
+        }
+
+        // Hook into existing tab switching
+        const originalSwitchCctvSub = window.switchCctvSub || (() => {});
+        window.switchCctvSub = function(tab) {
+            if (tab === 'traffic') {
+                initializeTrafficData();
+            }
+            return originalSwitchCctvSub(tab);
+        };
 
     </script>
     </div><!-- /appMain -->
