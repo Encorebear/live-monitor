@@ -1477,6 +1477,7 @@
         let disasterMarkers = [];
         let submarineLines = [];
         let aircraftMarkers = [];
+        let _aircraftLoading = false;
         let terminatorPolygon = null;
         let chokePointZones = [];
         let currentDefcon = 3;
@@ -1524,7 +1525,13 @@
             generateBriefing();
             updateCountryInstability();
             updateTerminator();
-            setInterval(updateTerminator, 300000); // Update every 5 minutes
+            setInterval(updateTerminator, 300000);
+
+            // Aircraft data - deferred 5s to avoid blocking initial render
+            setTimeout(() => {
+                loadAircraftData();
+                setInterval(loadAircraftData, 180000); // Refresh every 3min
+            }, 5000);
             loadNewsCards();
 
             // Auto-restore ITS API key on page load
@@ -2253,14 +2260,7 @@
             addSubmarineCables();
             addChokePoints();
 
-            // Load initial earthquake data
-            loadEarthquakeData();
-
-            // Load aircraft data (deferred to avoid blocking initial render)
-            setTimeout(() => {
-                loadAircraftData();
-                setInterval(loadAircraftData, 120000); // Refresh every 2min
-            }, 5000);
+            // Aircraft and earthquake loaded from DOMContentLoaded handler
         }
 
         // Add static conflict markers
@@ -2477,6 +2477,9 @@
 
         // Load aircraft data from OpenSky Network
         function loadAircraftData() {
+            if (_aircraftLoading) return;
+            _aircraftLoading = true;
+
             // Clear existing aircraft markers
             aircraftMarkers.forEach(marker => map.removeLayer(marker));
             aircraftMarkers = [];
@@ -2543,8 +2546,10 @@
                         }
                     });
                     console.log(`군용기 ${filtered.length}대 로드 완료`);
+                    _aircraftLoading = false;
                 })
                 .catch(error => {
+                    _aircraftLoading = false;
                     console.warn('OpenSky API 로드 실패, 시뮬레이션 데이터 사용:', error);
                     // Fallback: simulated military aircraft positions
                     const simAircraft = [
@@ -2580,12 +2585,14 @@
                         }
                     });
                     console.log('시뮬레이션 군용기 10대 로드');
+                    _aircraftLoading = false;
                 });
         }
 
         // Load earthquake data from USGS
         function loadEarthquakeData() {
-            const timeFilter = currentTimeFilter === '1h' ? 'all_hour' :
+            // Use all_day as minimum to ensure data is available
+            const timeFilter = currentTimeFilter === '1h' ? 'all_day' :
                              currentTimeFilter === '6h' ? 'all_day' :
                              currentTimeFilter === '24h' ? 'all_day' :
                              currentTimeFilter === '48h' ? 'all_week' : 'all_week';
@@ -2593,16 +2600,19 @@
             const url = `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/${timeFilter}.geojson`;
 
             fetch(url)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
                 .then(data => {
                     // Clear existing earthquake markers
                     earthquakeMarkers.forEach(marker => map.removeLayer(marker));
                     earthquakeMarkers = [];
-                    lastEarthquakes = data.features.slice(0, 10);
+                    lastEarthquakes = data.features.slice(0, 20);
 
-                    // Add new markers
+                    // Add new markers (M1.0+ to ensure visibility)
                     data.features.forEach(feature => {
-                        if (feature.properties.mag >= 2.5) {
+                        if (feature.properties.mag >= 1.0) {
                             const coords = feature.geometry.coordinates;
                             const mag = feature.properties.mag;
                             let color = '#22c55e'; // green <4
