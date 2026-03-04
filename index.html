@@ -3589,14 +3589,20 @@
                         return;
                     }
 
-                    // Sort by road name and limit to 15 items
+                    // Sort by speed and limit to 15 unique road names
+                    const seen = new Set();
                     const items = data.body.items
-                        .sort((a, b) => (b.speed || 0) - (a.speed || 0))
+                        .filter(item => {
+                            if (!item.roadName || seen.has(item.roadName)) return false;
+                            seen.add(item.roadName);
+                            return true;
+                        })
+                        .sort((a, b) => (parseFloat(b.speed) || 0) - (parseFloat(a.speed) || 0))
                         .slice(0, 15);
 
                     let totalSpeed = 0;
                     items.forEach(item => {
-                        const speed = item.speed || 0;
+                        const speed = parseFloat(item.speed) || 0;
                         totalSpeed += speed;
 
                         const status = getSpeedStatus(speed);
@@ -3659,7 +3665,13 @@
         function formatIncidentTime(dateString) {
             if (!dateString) return '시간 정보 없음';
             try {
-                const date = new Date(dateString);
+                // ITS API format: YYYYMMDDHHmmss (e.g., 20260203190000)
+                const y = dateString.substring(0, 4);
+                const m = dateString.substring(4, 6);
+                const d = dateString.substring(6, 8);
+                const h = dateString.substring(8, 10);
+                const mi = dateString.substring(10, 12);
+                const date = new Date(`${y}-${m}-${d}T${h}:${mi}:00`);
                 const now = new Date();
                 const diff = now - date;
                 const minutes = Math.floor(diff / 60000);
