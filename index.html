@@ -3627,7 +3627,7 @@
                 if (isSimulated) {
                     const notice = document.createElement('div');
                     notice.style.cssText = 'text-align:center;color:#6b7280;font-size:11px;padding:8px;border-top:1px solid #374151;margin-top:8px;';
-                    notice.textContent = '⚡ 시뮬레이션 데이터 (API 키 갱신 필요)';
+                    notice.textContent = '⚡ 시뮬레이션 데이터 (일일 API 호출 제한 초과)';
                     feed.appendChild(notice);
                 }
                 updateTrafficTimestamp();
@@ -3635,18 +3635,33 @@
 
             fetch(apiUrl)
                 .then(response => {
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    if (!response.ok) {
+                        return response.json().then(errData => {
+                            if (errData.header && errData.header.resultCode === 4001) {
+                                throw new Error('QUOTA_EXCEEDED');
+                            }
+                            throw new Error(`HTTP ${response.status}`);
+                        }).catch(e => { throw e.message ? e : new Error(`HTTP ${response.status}`); });
+                    }
                     return response.json();
                 })
                 .then(data => {
+                    if (data.header && data.header.resultCode === 4001) {
+                        throw new Error('QUOTA_EXCEEDED');
+                    }
                     if (!data.body || !data.body.items || data.body.items.length === 0) {
                         renderIncidents([], 0, false);
                         return;
                     }
+                    window._itsEventCache = { data: data.body.items, total: data.body.totalCount, time: Date.now() };
                     renderIncidents(data.body.items, data.body.totalCount, false);
                 })
                 .catch(error => {
-                    console.warn('ITS 돌발정보 API 실패, 시뮬레이션 사용:', error.message);
+                    console.warn('ITS 돌발정보 API 실패:', error.message);
+                    if (window._itsEventCache && (Date.now() - window._itsEventCache.time) < 600000) {
+                        renderIncidents(window._itsEventCache.data, window._itsEventCache.total, false);
+                        return;
+                    }
                     const simulated = generateSimulatedIncidents(region);
                     renderIncidents(simulated, simulated.length, true);
                 });
@@ -3694,7 +3709,7 @@
                 if (isSimulated) {
                     const notice = document.createElement('div');
                     notice.style.cssText = 'text-align:center;color:#6b7280;font-size:11px;padding:8px;border-top:1px solid #374151;margin-top:8px;';
-                    notice.textContent = '⚡ 시뮬레이션 데이터 (API 키 갱신 필요)';
+                    notice.textContent = '⚡ 시뮬레이션 데이터 (일일 API 호출 제한 초과)';
                     table.appendChild(notice);
                 }
 
@@ -3722,18 +3737,33 @@
 
             fetch(apiUrl)
                 .then(response => {
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    if (!response.ok) {
+                        return response.json().then(errData => {
+                            if (errData.header && errData.header.resultCode === 4001) {
+                                throw new Error('QUOTA_EXCEEDED');
+                            }
+                            throw new Error(`HTTP ${response.status}`);
+                        }).catch(e => { throw e.message ? e : new Error(`HTTP ${response.status}`); });
+                    }
                     return response.json();
                 })
                 .then(data => {
+                    if (data.header && data.header.resultCode === 4001) {
+                        throw new Error('QUOTA_EXCEEDED');
+                    }
                     if (!data.body || !data.body.items || data.body.items.length === 0) {
                         renderSpeeds([], false);
                         return;
                     }
+                    window._itsSpeedCache = { data: data.body.items, time: Date.now() };
                     renderSpeeds(data.body.items, false);
                 })
                 .catch(error => {
-                    console.warn('ITS 교통정보 API 실패, 시뮬레이션 사용:', error.message);
+                    console.warn('ITS 교통정보 API 실패:', error.message);
+                    if (window._itsSpeedCache && (Date.now() - window._itsSpeedCache.time) < 600000) {
+                        renderSpeeds(window._itsSpeedCache.data, false);
+                        return;
+                    }
                     const simulated = generateSimulatedSpeeds();
                     renderSpeeds(simulated, true);
                 });
