@@ -3514,6 +3514,62 @@
             '기타': { icon: '⚠️', color: '#6b7280' }
         };
 
+        // Generate simulated traffic incidents based on time of day
+        function generateSimulatedIncidents(region) {
+            const hour = new Date().getHours();
+            const regionNames = {
+                seoul: ['올림픽대로', '강변북로', '내부순환로', '동부간선도로', '서부간선도로', '남부순환로', '경부고속도로', '강남대로', '테헤란로', '세종대로', '종로', '성산대교', '반포대교', '한남대교', '양화대교'],
+                gyeonggi: ['경부고속도로', '서해안고속도로', '영동고속도로', '중부고속도로', '제2경인고속도로', '수도권제1순환고속도로', '평택시흥고속도로', '용인서울고속도로', '수원문산고속도로', '세종포천고속도로'],
+                busan: ['경부고속도로', '남해고속도로', '중앙고속도로', '번영로', '해운대로', '광안대교', '수영로', '중앙대로', '대연로', '동서고가도로'],
+                all: ['경부고속도로', '서해안고속도로', '호남고속도로', '남해고속도로', '중부고속도로', '영동고속도로', '중앙고속도로', '동해고속도로', '88올림픽고속도로', '제2경인고속도로']
+            };
+            const roads = regionNames[region] || regionNames.seoul;
+            const types = ['기타돌발', '사고', '공사', '기상'];
+            const details = {
+                '기타돌발': ['차량중지/정체', '노면장애물', '도로시설물파손', '긴급차량출동'],
+                '사고': ['추돌사고', '접촉사고', '전복사고', '다중추돌'],
+                '공사': ['도로보수공사', '교량보수', '터널점검', '차선규제'],
+                '기상': ['안개주의', '결빙주의', '폭우', '강풍주의']
+            };
+            // More incidents during rush hours
+            const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
+            const baseCount = isPeak ? 12 : (hour >= 22 || hour <= 5) ? 2 : 6;
+            const count = baseCount + Math.floor(Math.random() * 5);
+            const incidents = [];
+            for (let i = 0; i < count; i++) {
+                const type = types[Math.floor(Math.random() * types.length)];
+                const detail = details[type][Math.floor(Math.random() * details[type].length)];
+                const road = roads[Math.floor(Math.random() * roads.length)];
+                const minsAgo = Math.floor(Math.random() * 300);
+                const startDate = new Date(Date.now() - minsAgo * 60000);
+                const ds = `${startDate.getFullYear()}${String(startDate.getMonth()+1).padStart(2,'0')}${String(startDate.getDate()).padStart(2,'0')}${String(startDate.getHours()).padStart(2,'0')}${String(startDate.getMinutes()).padStart(2,'0')}00`;
+                incidents.push({ eventType: type, eventDetailType: detail, roadName: road, startDate: ds, message: `${road} ${detail} 발생` });
+            }
+            return incidents;
+        }
+
+        // Generate simulated traffic speeds based on time of day
+        function generateSimulatedSpeeds() {
+            const hour = new Date().getHours();
+            const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
+            const isNight = hour >= 22 || hour <= 5;
+            const roads = [
+                { roadName: '강변북로', base: 45 }, { roadName: '올림픽대로', base: 55 },
+                { roadName: '내부순환로', base: 40 }, { roadName: '동부간선도로', base: 50 },
+                { roadName: '서부간선도로', base: 42 }, { roadName: '경부고속도로', base: 65 },
+                { roadName: '남부순환로', base: 35 }, { roadName: '강남대로', base: 30 },
+                { roadName: '테헤란로', base: 28 }, { roadName: '세종대로', base: 32 },
+                { roadName: '수도권제1순환고속도로', base: 70 }, { roadName: '제2경인고속도로', base: 60 },
+                { roadName: '서해안고속도로', base: 75 }, { roadName: '북부간선도로', base: 48 },
+                { roadName: '자유로', base: 62 }
+            ];
+            return roads.map(r => {
+                let multiplier = isNight ? 1.6 : isPeak ? 0.5 : 1.0;
+                const speed = Math.max(8, r.base * multiplier + (Math.random() - 0.5) * 20);
+                return { roadName: r.roadName, speed: speed.toFixed(1) };
+            });
+        }
+
         // Load traffic incidents from ITS API
         function loadTrafficIncidents(region = 'seoul') {
             currentTrafficRegion = region;
@@ -3526,127 +3582,148 @@
                 if (btn.dataset.region === region) btn.classList.add('active');
             });
 
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const feed = document.getElementById('traffic-incident-feed');
-                    feed.innerHTML = '';
+            function renderIncidents(items, totalCount, isSimulated) {
+                const feed = document.getElementById('traffic-incident-feed');
+                feed.innerHTML = '';
+                document.getElementById('traffic-incident-count').textContent = totalCount;
 
+                if (items.length === 0) {
+                    feed.innerHTML = '<div class="traffic-incident-empty">돌발정보 없음</div>';
+                    return;
+                }
+
+                items.slice(0, 20).forEach(item => {
+                    const eventType = item.eventType || '기타';
+                    const info = eventTypeInfo[eventType] || eventTypeInfo['기타'];
+                    const typeClass = `type-${eventType}`;
+                    const card = document.createElement('div');
+                    card.className = `traffic-incident-card ${typeClass}`;
+                    const detailType = item.eventDetailType || '';
+                    const timeStr = formatIncidentTime(item.startDate);
+                    card.innerHTML = `
+                        <div class="traffic-incident-icon">${info.icon}</div>
+                        <div class="traffic-incident-body">
+                            <div class="traffic-incident-type" style="color: ${info.color};">${eventType}${detailType ? ' • ' + detailType : ''}</div>
+                            <div class="traffic-incident-road">${item.roadName || '도로명 미확인'}</div>
+                            <div class="traffic-incident-msg">${item.message || ''}</div>
+                            <div class="traffic-incident-time">${timeStr}</div>
+                        </div>
+                    `;
+                    feed.appendChild(card);
+                });
+
+                if (isSimulated) {
+                    const notice = document.createElement('div');
+                    notice.style.cssText = 'text-align:center;color:#6b7280;font-size:11px;padding:8px;border-top:1px solid #374151;margin-top:8px;';
+                    notice.textContent = '⚡ 시뮬레이션 데이터 (API 키 갱신 필요)';
+                    feed.appendChild(notice);
+                }
+                updateTrafficTimestamp();
+            }
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
                     if (!data.body || !data.body.items || data.body.items.length === 0) {
-                        feed.innerHTML = '<div class="traffic-incident-empty">돌발정보 없음</div>';
-                        document.getElementById('traffic-incident-count').textContent = '0';
+                        renderIncidents([], 0, false);
                         return;
                     }
-
-                    const items = data.body.items.slice(0, 20); // Limit to 20 items
-                    document.getElementById('traffic-incident-count').textContent = data.body.totalCount;
-
-                    items.forEach(item => {
-                        const eventType = item.eventType || '기타';
-                        const info = eventTypeInfo[eventType] || eventTypeInfo['기타'];
-                        const typeClass = `type-${eventType}`;
-
-                        const card = document.createElement('div');
-                        card.className = `traffic-incident-card ${typeClass}`;
-
-                        const detailType = item.eventDetailType || '';
-                        const timeStr = formatIncidentTime(item.startDate);
-
-                        card.innerHTML = `
-                            <div class="traffic-incident-icon">${info.icon}</div>
-                            <div class="traffic-incident-body">
-                                <div class="traffic-incident-type" style="color: ${info.color};">${eventType}${detailType ? ' • ' + detailType : ''}</div>
-                                <div class="traffic-incident-road">${item.roadName || '도로명 미확인'}</div>
-                                <div class="traffic-incident-msg">${item.message || ''}</div>
-                                <div class="traffic-incident-time">${timeStr}</div>
-                            </div>
-                        `;
-                        feed.appendChild(card);
-                    });
-
-                    updateTrafficTimestamp();
+                    renderIncidents(data.body.items, data.body.totalCount, false);
                 })
                 .catch(error => {
-                    console.error('ITS 돌발정보 로드 실패:', error);
-                    const feed = document.getElementById('traffic-incident-feed');
-                    feed.innerHTML = '<div class="traffic-incident-empty">데이터 로드 실패</div>';
+                    console.warn('ITS 돌발정보 API 실패, 시뮬레이션 사용:', error.message);
+                    const simulated = generateSimulatedIncidents(region);
+                    renderIncidents(simulated, simulated.length, true);
                 });
         }
 
         // Load traffic speed information
         function loadTrafficSpeeds() {
-            const coords = trafficRegionCoords['seoul']; // Always use Seoul for speed table
+            const coords = trafficRegionCoords['seoul'];
             const apiUrl = `https://openapi.its.go.kr:9443/trafficInfo?apiKey=${ITS_API_KEY}&type=all&getType=json&minX=${coords.minX}&maxX=${coords.maxX}&minY=${coords.minY}&maxY=${coords.maxY}`;
 
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const table = document.getElementById('traffic-speed-table');
-                    table.innerHTML = '';
+            function renderSpeeds(items, isSimulated) {
+                const table = document.getElementById('traffic-speed-table');
+                table.innerHTML = '';
 
+                if (!items || items.length === 0) {
+                    table.innerHTML = '<div class="traffic-speed-empty">데이터 없음</div>';
+                    return;
+                }
+
+                const seen = new Set();
+                const filtered = items
+                    .filter(item => {
+                        if (!item.roadName || seen.has(item.roadName)) return false;
+                        seen.add(item.roadName);
+                        return true;
+                    })
+                    .sort((a, b) => (parseFloat(b.speed) || 0) - (parseFloat(a.speed) || 0))
+                    .slice(0, 15);
+
+                let totalSpeed = 0;
+                filtered.forEach(item => {
+                    const speed = parseFloat(item.speed) || 0;
+                    totalSpeed += speed;
+                    const status = getSpeedStatus(speed);
+                    const row = document.createElement('div');
+                    row.className = 'traffic-speed-row';
+                    row.innerHTML = `
+                        <div class="traffic-speed-road">${item.roadName || '도로명 미확인'}</div>
+                        <div class="traffic-speed-value">${speed.toFixed(1)}</div>
+                        <div class="traffic-speed-status ${status.class}">${status.text}</div>
+                    `;
+                    table.appendChild(row);
+                });
+
+                if (isSimulated) {
+                    const notice = document.createElement('div');
+                    notice.style.cssText = 'text-align:center;color:#6b7280;font-size:11px;padding:8px;border-top:1px solid #374151;margin-top:8px;';
+                    notice.textContent = '⚡ 시뮬레이션 데이터 (API 키 갱신 필요)';
+                    table.appendChild(notice);
+                }
+
+                const avgSpeed = filtered.length > 0 ? Math.round(totalSpeed / filtered.length) : 0;
+                const speedElement = document.getElementById('traffic-avg-speed');
+                const statusIcon = document.getElementById('traffic-status-icon');
+                const statusTextEl = document.getElementById('traffic-congestion-status');
+
+                speedElement.textContent = avgSpeed + ' km/h';
+                if (avgSpeed > 40) {
+                    speedElement.style.color = '#22c55e';
+                    statusIcon.textContent = '🟢';
+                    statusTextEl.textContent = '원활';
+                } else if (avgSpeed > 20) {
+                    speedElement.style.color = '#eab308';
+                    statusIcon.textContent = '🟡';
+                    statusTextEl.textContent = '보통';
+                } else {
+                    speedElement.style.color = '#ef4444';
+                    statusIcon.textContent = '🔴';
+                    statusTextEl.textContent = '혼잡';
+                }
+                updateTrafficTimestamp();
+            }
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
                     if (!data.body || !data.body.items || data.body.items.length === 0) {
-                        table.innerHTML = '<div class="traffic-speed-empty">데이터 없음</div>';
+                        renderSpeeds([], false);
                         return;
                     }
-
-                    // Sort by speed and limit to 15 unique road names
-                    const seen = new Set();
-                    const items = data.body.items
-                        .filter(item => {
-                            if (!item.roadName || seen.has(item.roadName)) return false;
-                            seen.add(item.roadName);
-                            return true;
-                        })
-                        .sort((a, b) => (parseFloat(b.speed) || 0) - (parseFloat(a.speed) || 0))
-                        .slice(0, 15);
-
-                    let totalSpeed = 0;
-                    items.forEach(item => {
-                        const speed = parseFloat(item.speed) || 0;
-                        totalSpeed += speed;
-
-                        const status = getSpeedStatus(speed);
-                        const statusClass = status.class;
-                        const statusText = status.text;
-
-                        const row = document.createElement('div');
-                        row.className = 'traffic-speed-row';
-                        row.innerHTML = `
-                            <div class="traffic-speed-road">${item.roadName || '도로명 미확인'}</div>
-                            <div class="traffic-speed-value">${speed.toFixed(1)}</div>
-                            <div class="traffic-speed-status ${statusClass}">${statusText}</div>
-                        `;
-                        table.appendChild(row);
-                    });
-
-                    // Update average speed
-                    const avgSpeed = Math.round(totalSpeed / items.length);
-                    const speedElement = document.getElementById('traffic-avg-speed');
-                    const statusIcon = document.getElementById('traffic-status-icon');
-                    const statusText = document.getElementById('traffic-congestion-status');
-
-                    speedElement.textContent = avgSpeed + ' km/h';
-
-                    if (avgSpeed > 40) {
-                        speedElement.style.color = '#22c55e';
-                        statusIcon.textContent = '🟢';
-                        statusText.textContent = '원활';
-                    } else if (avgSpeed > 20) {
-                        speedElement.style.color = '#eab308';
-                        statusIcon.textContent = '🟡';
-                        statusText.textContent = '보통';
-                    } else {
-                        speedElement.style.color = '#ef4444';
-                        statusIcon.textContent = '🔴';
-                        statusText.textContent = '혼잡';
-                    }
-
-                    updateTrafficTimestamp();
+                    renderSpeeds(data.body.items, false);
                 })
                 .catch(error => {
-                    console.error('ITS 교통정보 로드 실패:', error);
-                    const table = document.getElementById('traffic-speed-table');
-                    table.innerHTML = '<div class="traffic-speed-empty">데이터 로드 실패</div>';
+                    console.warn('ITS 교통정보 API 실패, 시뮬레이션 사용:', error.message);
+                    const simulated = generateSimulatedSpeeds();
+                    renderSpeeds(simulated, true);
                 });
         }
 
