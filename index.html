@@ -2942,30 +2942,69 @@
 
         // Add static conflict markers
         function addStaticConflictMarkers() {
+            // Fetch real-time conflict data from GDELT API
+            const gdeltUrl = 'https://api.gdeltproject.org/api/v2/geo/geo?query=conflict%20OR%20war%20OR%20attack%20OR%20military&mode=pointdata&format=geojson&timespan=7d&maxpoints=50&sortby=date';
+            fetch(gdeltUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.features || data.features.length === 0) {
+                        addFallbackConflictMarkers();
+                        return;
+                    }
+                    // Deduplicate by rounding coords to ~50km grid
+                    const seen = new Set();
+                    const filtered = data.features.filter(f => {
+                        const key = `${(f.geometry.coordinates[1]).toFixed(1)},${(f.geometry.coordinates[0]).toFixed(1)}`;
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                    }).slice(0, 30);
+
+                    filtered.forEach(f => {
+                        const lat = f.geometry.coordinates[1];
+                        const lng = f.geometry.coordinates[0];
+                        const name = f.properties.name || '분쟁 이벤트';
+                        const url = f.properties.html || f.properties.url || '';
+                        const marker = L.circleMarker([lat, lng], {
+                            radius: 7,
+                            fillColor: '#ef4444',
+                            color: '#dc2626',
+                            weight: 2,
+                            opacity: 0.8,
+                            fillOpacity: 0.7,
+                            className: 'conflict-marker'
+                        }).addTo(map);
+                        const popupContent = url
+                            ? `<strong>⚠️ 분쟁/위기</strong><br/><span style="font-size:11px">${name.substring(0,80)}</span><br/><a href="${url}" target="_blank" style="font-size:10px;color:#60a5fa">기사보기 ↗</a>`
+                            : `<strong>⚠️ 분쟁/위기</strong><br/><span style="font-size:11px">${name.substring(0,80)}</span>`;
+                        marker.bindPopup(popupContent);
+                        conflictMarkers.push(marker);
+                    });
+                    console.log(`[GDELT] ${filtered.length}개 분쟁 마커 로드 완료`);
+                })
+                .catch(err => {
+                    console.warn('[GDELT] 분쟁 데이터 로드 실패, 폴백 사용:', err);
+                    addFallbackConflictMarkers();
+                });
+        }
+
+        // Fallback conflict markers when GDELT is unavailable
+        function addFallbackConflictMarkers() {
             const conflicts = [
-                { name: '우크라이나-러시아', lat: 48.5, lng: 32.0, desc: '전면전 지속, 러시아 도네츠크 공세 강화' },
-                { name: '가자 지구', lat: 31.4, lng: 34.4, desc: '휴전 중이나 매우 불안정' },
-                { name: '서안지구', lat: 31.9, lng: 35.2, desc: '이스라엘 정착촌 확대, 긴장 고조' },
-                { name: '수단', lat: 15.5, lng: 32.5, desc: 'RSF vs 수단군 내전, 세계 최악의 인도적 위기' },
-                { name: '미얀마', lat: 19.7, lng: 96.2, desc: '군부 vs 민주연합, 군부 영토 축소 중' },
-                { name: '예멘', lat: 15.5, lng: 44.2, desc: '후티 반군 홍해 선박 공격 지속' },
-                { name: '시리아', lat: 35.0, lng: 38.5, desc: '아사드 퇴진 후 과도정부, ISIS 재부상 우려' },
-                { name: '대만해협', lat: 24.0, lng: 121.5, desc: '중국 군사훈련 강화, 긴장 고조' },
-                { name: '콩고 동부', lat: -1.5, lng: 29.0, desc: 'M23 반군 활동, 인도적 위기' }
+                { name: '우크라이나-러시아', lat: 48.5, lng: 32.0, desc: '활성 분쟁 지역' },
+                { name: '가자 지구', lat: 31.4, lng: 34.4, desc: '활성 분쟁 지역' },
+                { name: '수단', lat: 15.5, lng: 32.5, desc: '활성 분쟁 지역' },
+                { name: '미얀마', lat: 19.7, lng: 96.2, desc: '활성 분쟁 지역' },
+                { name: '예멘', lat: 15.5, lng: 44.2, desc: '활성 분쟁 지역' },
+                { name: '시리아', lat: 35.0, lng: 38.5, desc: '활성 분쟁 지역' },
+                { name: '콩고 동부', lat: -1.5, lng: 29.0, desc: '활성 분쟁 지역' }
             ];
-
-            conflicts.forEach(conflict => {
-                const marker = L.circleMarker([conflict.lat, conflict.lng], {
-                    radius: 8,
-                    fillColor: '#ef4444',
-                    color: '#dc2626',
-                    weight: 2,
-                    opacity: 0.8,
-                    fillOpacity: 0.7,
-                    className: 'conflict-marker'
+            conflicts.forEach(c => {
+                const marker = L.circleMarker([c.lat, c.lng], {
+                    radius: 8, fillColor: '#ef4444', color: '#dc2626',
+                    weight: 2, opacity: 0.8, fillOpacity: 0.7, className: 'conflict-marker'
                 }).addTo(map);
-
-                marker.bindPopup(`<strong>${conflict.name}</strong><br/>${conflict.desc || '분쟁지역'}`);
+                marker.bindPopup(`<strong>${c.name}</strong><br/>${c.desc}`);
                 conflictMarkers.push(marker);
             });
         }
@@ -3355,91 +3394,124 @@
             });
         }
 
-        // Load simulated natural disasters
+        // Load real-time natural disaster events from NASA EONET
         function loadDisasterData() {
-            const disasters = [
-                { type: 'volcano', emoji: '🌋', name: 'Mount Merapi Eruption', location: 'Indonesia', severity: 'high' },
-                { type: 'wildfire', emoji: '🔥', name: 'Wildfire Alert', location: 'California', severity: 'high' },
-                { type: 'storm', emoji: '🌀', name: 'Typhoon Formation', location: 'Pacific', severity: 'medium' },
-                { type: 'flood', emoji: '🌊', name: 'Flash Flood Warning', location: 'Bangladesh', severity: 'high' }
-            ];
-
-            lastDisasters = disasters;
-            const feed = document.getElementById('disasters-feed');
-            feed.innerHTML = '';
-
-            disasters.forEach(disaster => {
-                const div = document.createElement('div');
-                div.className = 'feed-item';
-                const severityClass = `severity-${disaster.severity}`;
-                div.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 18px;">${disaster.emoji}</span>
-                        <div>
-                            <div class="feed-item-location">${disaster.name}</div>
-                            <div style="font-size: 10px; color: #6b7280;">${disaster.location}</div>
-                            <span class="feed-item-severity ${severityClass}" style="margin-top: 4px; display: inline-block;">${disaster.severity.toUpperCase()}</span>
-                        </div>
-                    </div>
-                `;
-                feed.appendChild(div);
-            });
+            fetch('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=8')
+                .then(res => res.json())
+                .then(data => {
+                    const feed = document.getElementById('disasters-feed');
+                    feed.innerHTML = '';
+                    if (!data.events || data.events.length === 0) {
+                        feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">현재 활성 재난 없음</div>';
+                        return;
+                    }
+                    const emojiMap = { 'Wildfires': '🔥', 'Volcanoes': '🌋', 'Severe Storms': '🌀', 'Floods': '🌊', 'Earthquakes': '🟡', 'Drought': '☀️', 'Dust and Haze': '🌫️', 'Landslides': '⛰️', 'Snow': '❄️', 'Sea and Lake Ice': '🧊', 'Temperature Extremes': '🌡️' };
+                    data.events.slice(0, 6).forEach(event => {
+                        const category = event.categories && event.categories[0] ? event.categories[0].title : 'Unknown';
+                        const emoji = emojiMap[category] || '⚠️';
+                        const div = document.createElement('div');
+                        div.className = 'feed-item';
+                        div.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 18px;">${emoji}</span>
+                                <div>
+                                    <div class="feed-item-location">${(event.title || '').substring(0, 50)}</div>
+                                    <div style="font-size: 10px; color: #6b7280;">${category}</div>
+                                </div>
+                            </div>
+                        `;
+                        feed.appendChild(div);
+                    });
+                    lastDisasters = data.events;
+                    console.log(`[EONET] ${data.events.length}개 자연재해 이벤트 로드`);
+                })
+                .catch(err => {
+                    console.warn('[EONET] 재난 데이터 로드 실패:', err);
+                    const feed = document.getElementById('disasters-feed');
+                    feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">재난 데이터 로드 실패</div>';
+                });
         }
 
-        // Load simulated conflicts
+        // Load real-time conflict news from GDELT
         function loadSimulatedConflicts() {
-            const conflicts = [
-                { location: '동유럽 (우크라이나)', count: 1 },
-                { location: '중동 (가자·시리아·예멘·이란)', count: 4 },
-                { location: '아프리카 (수단·콩고)', count: 2 },
-                { location: '동남아 (미얀마)', count: 1 },
-                { location: '동아시아 (대만해협)', count: 1 }
-            ];
+            // Fetch real conflict events from GDELT API
+            const gdeltUrl = 'https://api.gdeltproject.org/api/v2/doc/doc?query=conflict%20OR%20war%20OR%20crisis%20OR%20attack&mode=artlist&maxrecords=15&format=json&timespan=3d&sort=datedesc';
+            fetch(gdeltUrl)
+                .then(res => res.json())
+                .then(data => {
+                    const feed = document.getElementById('conflicts-feed');
+                    feed.innerHTML = '';
+                    if (!data.articles || data.articles.length === 0) {
+                        feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">분쟁 데이터를 불러올 수 없습니다</div>';
+                        return;
+                    }
+                    // Group by domain/source for variety
+                    const seen = new Set();
+                    const articles = data.articles.filter(a => {
+                        const domain = a.domain || '';
+                        if (seen.has(domain)) return false;
+                        seen.add(domain);
+                        return true;
+                    }).slice(0, 8);
 
-            lastConflicts = conflicts;
-            const feed = document.getElementById('conflicts-feed');
-            feed.innerHTML = '';
-
-            conflicts.forEach(conflict => {
-                const div = document.createElement('div');
-                div.className = 'feed-item';
-                div.innerHTML = `
-                    <div class="feed-item-location">⚠️ ${conflict.location}</div>
-                    <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">보고된 사건: ${conflict.count}건</div>
-                `;
-                feed.appendChild(div);
-            });
+                    articles.forEach(article => {
+                        const div = document.createElement('div');
+                        div.className = 'feed-item';
+                        const timeStr = article.seendate ? new Date(article.seendate.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/, '$1-$2-$3T$4:$5:$6Z')).toLocaleString('ko-KR', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+                        const title = (article.title || '').substring(0, 60);
+                        div.innerHTML = `
+                            <div class="feed-item-location" style="cursor:pointer;" onclick="window.open('${article.url}','_blank')">⚠️ ${title}</div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">${article.source || article.domain || ''} · ${timeStr}</div>
+                        `;
+                        feed.appendChild(div);
+                    });
+                    lastConflicts = articles;
+                    console.log(`[GDELT] ${articles.length}개 분쟁 뉴스 로드 완료`);
+                })
+                .catch(err => {
+                    console.warn('[GDELT] 분쟁 뉴스 로드 실패:', err);
+                    const feed = document.getElementById('conflicts-feed');
+                    feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">분쟁 데이터를 불러오는 중 오류 발생</div>';
+                });
         }
 
         // Load weather alerts
         function loadWeatherAlerts() {
-            const alerts = [
-                { type: 'severe', location: 'Southeast US', text: 'Tornado Watch' },
-                { type: 'wind', location: 'North Atlantic', text: 'High Wind Advisory' },
-                { type: 'snow', location: 'Alps', text: 'Heavy Snow Expected' }
-            ];
-
-            const feed = document.getElementById('weather-feed');
-            feed.innerHTML = '';
-
-            alerts.forEach(alert => {
-                const div = document.createElement('div');
-                div.className = 'feed-item';
-                let emoji = '⚡';
-                if (alert.type === 'wind') emoji = '💨';
-                if (alert.type === 'snow') emoji = '❄️';
-
-                div.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span>${emoji}</span>
-                        <div>
-                            <div class="feed-item-location">${alert.text}</div>
-                            <div style="font-size: 10px; color: #6b7280;">${alert.location}</div>
-                        </div>
-                    </div>
-                `;
-                feed.appendChild(div);
-            });
+            // Fetch severe weather events from NASA EONET (storms category)
+            fetch('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=5&category=severeStorms,snow,floods')
+                .then(res => res.json())
+                .then(data => {
+                    const feed = document.getElementById('weather-feed');
+                    feed.innerHTML = '';
+                    if (!data.events || data.events.length === 0) {
+                        feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">현재 기상 경보 없음</div>';
+                        return;
+                    }
+                    data.events.slice(0, 5).forEach(event => {
+                        const category = event.categories && event.categories[0] ? event.categories[0].title : '';
+                        let emoji = '⚡';
+                        if (category.includes('Storm')) emoji = '🌀';
+                        if (category.includes('Snow')) emoji = '❄️';
+                        if (category.includes('Flood')) emoji = '🌊';
+                        const div = document.createElement('div');
+                        div.className = 'feed-item';
+                        div.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span>${emoji}</span>
+                                <div>
+                                    <div class="feed-item-location">${(event.title || '').substring(0, 45)}</div>
+                                    <div style="font-size: 10px; color: #6b7280;">${category}</div>
+                                </div>
+                            </div>
+                        `;
+                        feed.appendChild(div);
+                    });
+                })
+                .catch(err => {
+                    console.warn('[EONET] 기상 데이터 로드 실패:', err);
+                    const feed = document.getElementById('weather-feed');
+                    feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">기상 데이터 로드 실패</div>';
+                });
         }
 
         // Toggle map controls panel
@@ -3669,19 +3741,39 @@
 
         // Generate AI briefing
         function generateBriefing() {
-            const briefings = [
-                '전 세계적으로 지진 활동이 증가하고 있습니다. 태평양 고리 주변 지역에서 주의가 필요합니다.',
-                '해수면 온도가 상승하면서 이상 기후 현상이 심화되고 있습니다. 폭풍우 위험이 증가했습니다.',
-                '주요 선적 통로에서 지정학적 긴장이 고조되고 있습니다. 해운 비용이 상승할 것으로 예상됩니다.',
-                '자연 재해 발생 빈도가 역사적 평균 대비 15% 증가했습니다. 선제적 대비가 필수적입니다.',
-                '암호화폐 시장이 변동성을 보이고 있습니다. 기관 투자가 주도하는 움직임이 관찰됩니다.',
-                '전 지구적 공급망 장애가 지속되고 있습니다. 재정 정책 결정이 임박했습니다.',
-                '동아시아 지역의 지정학적 리스크가 높아지고 있습니다. 방위 지출 확대가 예상됩니다.'
+            // Fetch real news headlines from multiple RSS sources via rss2json
+            const feeds = [
+                'https://feeds.bbci.co.uk/news/world/rss.xml',
+                'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+                'https://feeds.reuters.com/Reuters/worldNews'
             ];
+            const feedUrl = feeds[Math.floor(Math.random() * feeds.length)];
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=5`;
 
-            const box = document.getElementById('briefingBox');
-            const random = briefings[Math.floor(Math.random() * briefings.length)];
-            box.textContent = random;
+            fetch(apiUrl)
+                .then(res => res.json())
+                .then(data => {
+                    const box = document.getElementById('briefingBox');
+                    if (!data.items || data.items.length === 0) {
+                        box.textContent = '뉴스 브리핑을 불러올 수 없습니다. 잠시 후 다시 시도합니다.';
+                        return;
+                    }
+                    // Build briefing from top headlines
+                    const headlines = data.items.slice(0, 4).map(item => {
+                        const title = item.title || '';
+                        return `• ${title}`;
+                    });
+                    const source = data.feed ? data.feed.title : '';
+                    const now = new Date().toLocaleString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+                    box.innerHTML = `<div style="font-size:11px;color:#60a5fa;margin-bottom:6px;">📡 실시간 뉴스 브리핑 (${source} · ${now})</div>` +
+                        headlines.map(h => `<div style="margin-bottom:4px;font-size:12px;line-height:1.4;">${h}</div>`).join('');
+                    console.log(`[RSS] 뉴스 브리핑 로드 완료: ${source}`);
+                })
+                .catch(err => {
+                    console.warn('[RSS] 뉴스 브리핑 로드 실패:', err);
+                    const box = document.getElementById('briefingBox');
+                    box.textContent = '뉴스 브리핑을 불러오는 중 오류가 발생했습니다.';
+                });
         }
 
         // Update country instability
@@ -3901,62 +3993,6 @@
             '기타': { icon: '⚠️', color: '#6b7280' }
         };
 
-        // Generate simulated traffic incidents based on time of day
-        function generateSimulatedIncidents(region) {
-            const hour = new Date().getHours();
-            const regionNames = {
-                seoul: ['올림픽대로', '강변북로', '내부순환로', '동부간선도로', '서부간선도로', '남부순환로', '경부고속도로', '강남대로', '테헤란로', '세종대로', '종로', '성산대교', '반포대교', '한남대교', '양화대교'],
-                gyeonggi: ['경부고속도로', '서해안고속도로', '영동고속도로', '중부고속도로', '제2경인고속도로', '수도권제1순환고속도로', '평택시흥고속도로', '용인서울고속도로', '수원문산고속도로', '세종포천고속도로'],
-                busan: ['경부고속도로', '남해고속도로', '중앙고속도로', '번영로', '해운대로', '광안대교', '수영로', '중앙대로', '대연로', '동서고가도로'],
-                all: ['경부고속도로', '서해안고속도로', '호남고속도로', '남해고속도로', '중부고속도로', '영동고속도로', '중앙고속도로', '동해고속도로', '88올림픽고속도로', '제2경인고속도로']
-            };
-            const roads = regionNames[region] || regionNames.seoul;
-            const types = ['기타돌발', '사고', '공사', '기상'];
-            const details = {
-                '기타돌발': ['차량중지/정체', '노면장애물', '도로시설물파손', '긴급차량출동'],
-                '사고': ['추돌사고', '접촉사고', '전복사고', '다중추돌'],
-                '공사': ['도로보수공사', '교량보수', '터널점검', '차선규제'],
-                '기상': ['안개주의', '결빙주의', '폭우', '강풍주의']
-            };
-            // More incidents during rush hours
-            const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
-            const baseCount = isPeak ? 12 : (hour >= 22 || hour <= 5) ? 2 : 6;
-            const count = baseCount + Math.floor(Math.random() * 5);
-            const incidents = [];
-            for (let i = 0; i < count; i++) {
-                const type = types[Math.floor(Math.random() * types.length)];
-                const detail = details[type][Math.floor(Math.random() * details[type].length)];
-                const road = roads[Math.floor(Math.random() * roads.length)];
-                const minsAgo = Math.floor(Math.random() * 300);
-                const startDate = new Date(Date.now() - minsAgo * 60000);
-                const ds = `${startDate.getFullYear()}${String(startDate.getMonth()+1).padStart(2,'0')}${String(startDate.getDate()).padStart(2,'0')}${String(startDate.getHours()).padStart(2,'0')}${String(startDate.getMinutes()).padStart(2,'0')}00`;
-                incidents.push({ eventType: type, eventDetailType: detail, roadName: road, startDate: ds, message: `${road} ${detail} 발생` });
-            }
-            return incidents;
-        }
-
-        // Generate simulated traffic speeds based on time of day
-        function generateSimulatedSpeeds() {
-            const hour = new Date().getHours();
-            const isPeak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
-            const isNight = hour >= 22 || hour <= 5;
-            const roads = [
-                { roadName: '강변북로', base: 45 }, { roadName: '올림픽대로', base: 55 },
-                { roadName: '내부순환로', base: 40 }, { roadName: '동부간선도로', base: 50 },
-                { roadName: '서부간선도로', base: 42 }, { roadName: '경부고속도로', base: 65 },
-                { roadName: '남부순환로', base: 35 }, { roadName: '강남대로', base: 30 },
-                { roadName: '테헤란로', base: 28 }, { roadName: '세종대로', base: 32 },
-                { roadName: '수도권제1순환고속도로', base: 70 }, { roadName: '제2경인고속도로', base: 60 },
-                { roadName: '서해안고속도로', base: 75 }, { roadName: '북부간선도로', base: 48 },
-                { roadName: '자유로', base: 62 }
-            ];
-            return roads.map(r => {
-                let multiplier = isNight ? 1.6 : isPeak ? 0.5 : 1.0;
-                const speed = Math.max(8, r.base * multiplier + (Math.random() - 0.5) * 20);
-                return { roadName: r.roadName, speed: speed.toFixed(1) };
-            });
-        }
-
         // Load traffic incidents from ITS API
         function loadTrafficIncidents(region = 'seoul') {
             currentTrafficRegion = region;
@@ -4037,8 +4073,7 @@
                         renderIncidents(window._itsEventCache.data, window._itsEventCache.total, false);
                         return;
                     }
-                    const simulated = generateSimulatedIncidents(region);
-                    renderIncidents(simulated, simulated.length, true);
+                    renderIncidents([], 0, false);
                 });
         }
 
@@ -4139,8 +4174,7 @@
                         renderSpeeds(window._itsSpeedCache.data, false);
                         return;
                     }
-                    const simulated = generateSimulatedSpeeds();
-                    renderSpeeds(simulated, true);
+                    renderSpeeds([], false);
                 });
         }
 
