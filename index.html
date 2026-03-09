@@ -1900,6 +1900,16 @@
                                 <option value="gyeongnam">경남</option>
                                 <option value="jeju">제주</option>
                             </select>
+                            <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:200px;">
+                                <div style="position:relative;flex:1;max-width:320px;">
+                                    <input id="cctv-search-input" type="text" placeholder="도로명 또는 지역 검색 (예: 올림픽대로, 강남)"
+                                        style="width:100%;padding:6px 32px 6px 10px;background:#1a1f28;border:1px solid #1e2a36;border-radius:4px;color:#e0e6ed;font-size:12px;outline:none;box-sizing:border-box;"
+                                        oninput="filterCctvCards()" onkeydown="if(event.key==='Enter'){filterCctvCards();}">
+                                    <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#6b7280;font-size:14px;pointer-events:none;">🔍</span>
+                                </div>
+                                <button onclick="clearCctvSearch()" style="padding:6px 10px;background:#374151;color:#9ca3af;border:1px solid #4b5563;border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap;" title="검색 초기화">초기화</button>
+                                <span id="cctv-search-result" style="font-size:11px;color:#6b7280;white-space:nowrap;"></span>
+                            </div>
                         </div>
                         <div id="cctv-api-status" style="margin-top:6px;font-size:11px;color:#6b7280;display:none;"></div>
                         <div id="cctv-filter-bar" style="display:none;margin-top:8px;gap:5px;flex-wrap:wrap;align-items:center;">
@@ -2554,6 +2564,47 @@
                     statusEl.textContent = '❌ 오류: ' + err.message;
                 }
             }
+        }
+
+        // ===== CCTV Search Functions =====
+        function filterCctvCards() {
+            const input = document.getElementById('cctv-search-input');
+            const resultSpan = document.getElementById('cctv-search-result');
+            if (!input) return;
+            const query = input.value.trim().toLowerCase();
+            const grid = document.getElementById('its-cctv-grid');
+            if (!grid) return;
+            const cards = grid.querySelectorAll(':scope > div[data-video-id]');
+            if (!query) {
+                cards.forEach(c => c.style.display = '');
+                if (resultSpan) resultSpan.textContent = '';
+                return;
+            }
+            let shown = 0;
+            cards.forEach(card => {
+                const nameEl = card.querySelector('div[style*="font-size"]');
+                const text = (card.textContent || '').toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = '';
+                    shown++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            if (resultSpan) {
+                resultSpan.textContent = shown > 0 ? `${shown}개 일치` : '결과 없음';
+                resultSpan.style.color = shown > 0 ? '#10b981' : '#ef4444';
+            }
+        }
+
+        function clearCctvSearch() {
+            const input = document.getElementById('cctv-search-input');
+            const resultSpan = document.getElementById('cctv-search-result');
+            if (input) input.value = '';
+            if (resultSpan) resultSpan.textContent = '';
+            const grid = document.getElementById('its-cctv-grid');
+            if (!grid) return;
+            grid.querySelectorAll(':scope > div[data-video-id]').forEach(c => c.style.display = '');
         }
 
         // ===== Lazy Loading CCTV System =====
