@@ -2654,12 +2654,14 @@
                 }
                 const source = getCellValue(cells[1]);
                 const title = getCellValue(cells[2]);
-                const link = getCellValue(cells[3]);
+                const linkRaw = getCellValue(cells[3]);
                 if (!title) continue;
+                // If link is not a valid URL (e.g. emoji 🔗), generate Google News search link from title
+                const link = (linkRaw && linkRaw.startsWith('http')) ? linkRaw : `https://www.google.com/search?q=${encodeURIComponent(title)}&tbm=nws`;
                 // Shorten date to just MM-DD HH:MM
                 const shortDate = dateStr.replace(/^\d{4}-/, '');
                 html += `<div class="sdata-news-card">
-                    <div class="sdata-news-title">${link ? `<a href="${link}" target="_blank">${title}</a>` : title}</div>
+                    <div class="sdata-news-title"><a href="${link}" target="_blank">${title}</a></div>
                     <div class="sdata-news-meta">
                         ${source ? `<span class="sdata-news-source">${source}</span>` : ''}
                         <span>${shortDate}</span>
