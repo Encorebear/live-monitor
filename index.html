@@ -216,18 +216,46 @@
             background-color: #0a0e14 !important;
         }
 
-        .map-controls {
+        .map-controls-toggle {
             position: absolute;
             left: 10px;
             top: 10px;
+            z-index: 401;
+            width: 36px;
+            height: 36px;
+            background-color: #111820;
+            border: 1px solid #1e2a36;
+            border-radius: 6px;
+            color: #e0e6ed;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .map-controls-toggle:hover {
+            border-color: #3b82f6;
+            background-color: #1a2332;
+        }
+        .map-controls {
+            position: absolute;
+            left: 10px;
+            top: 52px;
             background-color: #111820;
             border: 1px solid #1e2a36;
             border-radius: 4px;
             padding: 10px;
             z-index: 400;
             max-width: 150px;
-            max-height: 80vh;
+            max-height: calc(80vh - 52px);
             overflow-y: auto;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        .map-controls.collapsed {
+            transform: translateX(-110%);
+            opacity: 0;
+            pointer-events: none;
         }
 
         .map-controls::-webkit-scrollbar {
@@ -1317,9 +1345,19 @@
                 padding: 6px;
                 font-size: 10px;
             }
+            .map-controls.collapsed {
+                transform: translateX(-110%);
+                opacity: 0;
+                pointer-events: none;
+            }
             .map-controls .toggle-btn {
                 font-size: 10px;
                 padding: 4px 6px;
+            }
+            .map-controls-toggle {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
             }
             .control-title {
                 font-size: 9px;
@@ -1569,7 +1607,8 @@
                 <div class="map-container">
                     <div id="map"></div>
 
-                    <div class="map-controls">
+                    <button class="map-controls-toggle" onclick="toggleMapControls()" title="레이어 패널 열기/닫기">⚙️</button>
+                    <div class="map-controls" id="mapControlsPanel">
                         <div class="control-group">
                             <div class="control-title">레이어</div>
                             <label class="toggle-btn">
@@ -3298,6 +3337,12 @@
                 `;
                 feed.appendChild(div);
             });
+        }
+
+        // Toggle map controls panel
+        function toggleMapControls() {
+            const panel = document.getElementById('mapControlsPanel');
+            panel.classList.toggle('collapsed');
         }
 
         // Time filter
