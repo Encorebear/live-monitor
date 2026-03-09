@@ -2942,8 +2942,9 @@
 
         // Add static conflict markers
         function addStaticConflictMarkers() {
-            // Fetch conflict news from GDELT and match to known conflict regions
-            const gdeltUrl = 'https://api.gdeltproject.org/api/v2/doc/doc?query=armed+conflict+OR+military+strike+OR+war+zone&mode=artlist&maxrecords=25&format=json&timespan=3d&sort=DateDesc';
+            // Fetch BBC World News RSS and match to known conflict regions
+            const feedUrl = 'https://feeds.bbci.co.uk/news/world/rss.xml';
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
 
             // Known conflict regions with coordinates for geo-mapping
             const conflictRegions = {
@@ -2969,36 +2970,37 @@
                 'sahel': { lat: 14.5, lng: 2.1, name: '사헬 지역' }
             };
 
-            fetch(gdeltUrl)
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return res.json();
-                })
+            fetch(apiUrl)
+                .then(res => res.json())
                 .then(data => {
-                    if (!data.articles || data.articles.length === 0) {
+                    if (data.status !== 'ok' || !data.items || data.items.length === 0) {
                         addFallbackConflictMarkers();
                         return;
                     }
                     // Match articles to conflict regions
                     const matched = new Map();
-                    data.articles.forEach(article => {
-                        const text = ((article.title || '') + ' ' + (article.url || '')).toLowerCase();
+                    data.items.forEach(item => {
+                        const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
                         for (const [key, region] of Object.entries(conflictRegions)) {
                             if (text.includes(key) && !matched.has(region.name)) {
                                 matched.set(region.name, {
                                     ...region,
-                                    title: article.title || '',
-                                    url: article.url || '',
-                                    source: article.domain || ''
+                                    title: item.title || '',
+                                    url: item.link || '',
+                                    source: 'BBC News'
                                 });
                             }
                         }
                     });
 
-                    if (matched.size === 0) {
-                        addFallbackConflictMarkers();
-                        return;
-                    }
+                    // Always add fallback for major known conflicts not found in news
+                    const majorConflicts = ['우크라이나', '가자 지구', '수단', '미얀마', '예멘', '시리아', '콩고 동부'];
+                    majorConflicts.forEach(name => {
+                        if (!matched.has(name)) {
+                            const region = Object.values(conflictRegions).find(r => r.name === name);
+                            if (region) matched.set(name, { ...region, title: '', url: '', source: '' });
+                        }
+                    });
 
                     matched.forEach(conflict => {
                         const marker = L.circleMarker([conflict.lat, conflict.lng], {
@@ -3016,10 +3018,10 @@
                         marker.bindPopup(popup);
                         conflictMarkers.push(marker);
                     });
-                    console.log(`[GDELT] ${matched.size}개 분쟁 지역 마커 로드 (실시간 뉴스 매칭)`);
+                    console.log(`[RSS] ${matched.size}개 분쟁 지역 마커 로드 (실시간 뉴스 매칭)`);
                 })
                 .catch(err => {
-                    console.warn('[GDELT] 분쟁 데이터 로드 실패, 폴백 사용:', err);
+                    console.warn('[RSS] 분쟁 데이터 로드 실패, 폴백 사용:', err);
                     addFallbackConflictMarkers();
                 });
         }
@@ -3468,44 +3470,46 @@
                 });
         }
 
-        // Load real-time conflict news from GDELT
+        // Load real-time conflict/world news via RSS
         function loadSimulatedConflicts() {
-            // Fetch real conflict events from GDELT API
-            const gdeltUrl = 'https://api.gdeltproject.org/api/v2/doc/doc?query=conflict%20OR%20war%20OR%20crisis%20OR%20attack&mode=artlist&maxrecords=15&format=json&timespan=3d&sort=datedesc';
-            fetch(gdeltUrl)
+            const feedUrl = 'https://feeds.bbci.co.uk/news/world/rss.xml';
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
+            fetch(apiUrl)
                 .then(res => res.json())
                 .then(data => {
                     const feed = document.getElementById('conflicts-feed');
                     feed.innerHTML = '';
-                    if (!data.articles || data.articles.length === 0) {
+                    if (data.status !== 'ok' || !data.items || data.items.length === 0) {
                         feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">분쟁 데이터를 불러올 수 없습니다</div>';
                         return;
                     }
-                    // Group by domain/source for variety
-                    const seen = new Set();
-                    const articles = data.articles.filter(a => {
-                        const domain = a.domain || '';
-                        if (seen.has(domain)) return false;
-                        seen.add(domain);
-                        return true;
-                    }).slice(0, 8);
+                    // Filter for conflict/crisis related keywords
+                    const conflictKeywords = ['war', 'conflict', 'attack', 'military', 'strike', 'bomb', 'missile', 'troops', 'killed', 'crisis', 'battle', 'fighting', 'ukraine', 'gaza', 'iran', 'israel', 'syria', 'yemen', 'sudan', 'myanmar', 'weapons', 'nuclear', 'sanctions', 'invasion', 'ceasefire', 'hostage', 'terror', 'coup', 'protest'];
+                    const conflictItems = data.items.filter(item => {
+                        const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
+                        return conflictKeywords.some(kw => text.includes(kw));
+                    });
+                    // Use conflict items if found, otherwise show top world news
+                    const displayItems = conflictItems.length >= 3 ? conflictItems.slice(0, 8) : data.items.slice(0, 8);
 
-                    articles.forEach(article => {
+                    displayItems.forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'feed-item';
-                        const timeStr = article.seendate ? new Date(article.seendate.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/, '$1-$2-$3T$4:$5:$6Z')).toLocaleString('ko-KR', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
-                        const title = (article.title || '').substring(0, 60);
+                        const pubDate = item.pubDate ? new Date(item.pubDate).toLocaleString('ko-KR', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+                        const title = (item.title || '').substring(0, 60);
+                        const isConflict = conflictKeywords.some(kw => ((item.title||'')+(item.description||'')).toLowerCase().includes(kw));
+                        const icon = isConflict ? '⚠️' : '🌍';
                         div.innerHTML = `
-                            <div class="feed-item-location" style="cursor:pointer;" onclick="window.open('${article.url}','_blank')">⚠️ ${title}</div>
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">${article.source || article.domain || ''} · ${timeStr}</div>
+                            <div class="feed-item-location" style="cursor:pointer;" onclick="window.open('${item.link}','_blank')">${icon} ${title}</div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">BBC News · ${pubDate}</div>
                         `;
                         feed.appendChild(div);
                     });
-                    lastConflicts = articles;
-                    console.log(`[GDELT] ${articles.length}개 분쟁 뉴스 로드 완료`);
+                    lastConflicts = displayItems;
+                    console.log(`[RSS] ${displayItems.length}개 분쟁/세계 뉴스 로드 완료`);
                 })
                 .catch(err => {
-                    console.warn('[GDELT] 분쟁 뉴스 로드 실패:', err);
+                    console.warn('[RSS] 분쟁 뉴스 로드 실패:', err);
                     const feed = document.getElementById('conflicts-feed');
                     feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">분쟁 데이터를 불러오는 중 오류 발생</div>';
                 });
@@ -3775,31 +3779,21 @@
                 .catch(error => console.error('Hacker News 로드 실패:', error));
         }
 
-        // Generate AI briefing
+        // Generate AI briefing from real news RSS
         function generateBriefing() {
-            // Fetch real news headlines from multiple RSS sources via rss2json
-            const feeds = [
-                'https://feeds.bbci.co.uk/news/world/rss.xml',
-                'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
-                'https://feeds.reuters.com/Reuters/worldNews'
-            ];
-            const feedUrl = feeds[Math.floor(Math.random() * feeds.length)];
-            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=5`;
+            const feedUrl = 'https://feeds.bbci.co.uk/news/world/rss.xml';
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
 
             fetch(apiUrl)
                 .then(res => res.json())
                 .then(data => {
                     const box = document.getElementById('briefingBox');
-                    if (!data.items || data.items.length === 0) {
+                    if (data.status !== 'ok' || !data.items || data.items.length === 0) {
                         box.textContent = '뉴스 브리핑을 불러올 수 없습니다. 잠시 후 다시 시도합니다.';
                         return;
                     }
-                    // Build briefing from top headlines
-                    const headlines = data.items.slice(0, 4).map(item => {
-                        const title = item.title || '';
-                        return `• ${title}`;
-                    });
-                    const source = data.feed ? data.feed.title : '';
+                    const headlines = data.items.slice(0, 5).map(item => `• ${item.title || ''}`);
+                    const source = data.feed ? data.feed.title : 'BBC';
                     const now = new Date().toLocaleString('ko-KR', {hour:'2-digit', minute:'2-digit'});
                     box.innerHTML = `<div style="font-size:11px;color:#60a5fa;margin-bottom:6px;">📡 실시간 뉴스 브리핑 (${source} · ${now})</div>` +
                         headlines.map(h => `<div style="margin-bottom:4px;font-size:12px;line-height:1.4;">${h}</div>`).join('');
