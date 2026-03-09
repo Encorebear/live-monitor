@@ -2942,31 +2942,67 @@
 
         // Add static conflict markers
         function addStaticConflictMarkers() {
-            // Fetch real-time conflict data from GDELT API
-            const gdeltUrl = 'https://api.gdeltproject.org/api/v2/geo/geo?query=conflict%20OR%20war%20OR%20attack%20OR%20military&mode=pointdata&format=geojson&timespan=7d&maxpoints=50&sortby=date';
+            // Fetch conflict news from GDELT and match to known conflict regions
+            const gdeltUrl = 'https://api.gdeltproject.org/api/v2/doc/doc?query=armed+conflict+OR+military+strike+OR+war+zone&mode=artlist&maxrecords=25&format=json&timespan=3d&sort=DateDesc';
+
+            // Known conflict regions with coordinates for geo-mapping
+            const conflictRegions = {
+                'ukraine': { lat: 48.5, lng: 32.0, name: '우크라이나' },
+                'russia': { lat: 48.5, lng: 32.0, name: '우크라이나-러시아' },
+                'gaza': { lat: 31.4, lng: 34.4, name: '가자 지구' },
+                'israel': { lat: 31.8, lng: 35.0, name: '이스라엘-팔레스타인' },
+                'palestine': { lat: 31.9, lng: 35.2, name: '팔레스타인' },
+                'sudan': { lat: 15.5, lng: 32.5, name: '수단' },
+                'myanmar': { lat: 19.7, lng: 96.2, name: '미얀마' },
+                'yemen': { lat: 15.5, lng: 44.2, name: '예멘' },
+                'houthi': { lat: 15.5, lng: 44.2, name: '예멘 (후티)' },
+                'syria': { lat: 35.0, lng: 38.5, name: '시리아' },
+                'congo': { lat: -1.5, lng: 29.0, name: '콩고 동부' },
+                'taiwan': { lat: 24.0, lng: 121.5, name: '대만해협' },
+                'iran': { lat: 32.4, lng: 53.7, name: '이란' },
+                'somalia': { lat: 5.1, lng: 46.2, name: '소말리아' },
+                'libya': { lat: 26.3, lng: 17.2, name: '리비아' },
+                'iraq': { lat: 33.2, lng: 43.7, name: '이라크' },
+                'afghanistan': { lat: 33.9, lng: 67.7, name: '아프가니스탄' },
+                'ethiopia': { lat: 9.1, lng: 40.5, name: '에티오피아' },
+                'lebanon': { lat: 33.9, lng: 35.5, name: '레바논' },
+                'sahel': { lat: 14.5, lng: 2.1, name: '사헬 지역' }
+            };
+
             fetch(gdeltUrl)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
                 .then(data => {
-                    if (!data.features || data.features.length === 0) {
+                    if (!data.articles || data.articles.length === 0) {
                         addFallbackConflictMarkers();
                         return;
                     }
-                    // Deduplicate by rounding coords to ~50km grid
-                    const seen = new Set();
-                    const filtered = data.features.filter(f => {
-                        const key = `${(f.geometry.coordinates[1]).toFixed(1)},${(f.geometry.coordinates[0]).toFixed(1)}`;
-                        if (seen.has(key)) return false;
-                        seen.add(key);
-                        return true;
-                    }).slice(0, 30);
+                    // Match articles to conflict regions
+                    const matched = new Map();
+                    data.articles.forEach(article => {
+                        const text = ((article.title || '') + ' ' + (article.url || '')).toLowerCase();
+                        for (const [key, region] of Object.entries(conflictRegions)) {
+                            if (text.includes(key) && !matched.has(region.name)) {
+                                matched.set(region.name, {
+                                    ...region,
+                                    title: article.title || '',
+                                    url: article.url || '',
+                                    source: article.domain || ''
+                                });
+                            }
+                        }
+                    });
 
-                    filtered.forEach(f => {
-                        const lat = f.geometry.coordinates[1];
-                        const lng = f.geometry.coordinates[0];
-                        const name = f.properties.name || '분쟁 이벤트';
-                        const url = f.properties.html || f.properties.url || '';
-                        const marker = L.circleMarker([lat, lng], {
-                            radius: 7,
+                    if (matched.size === 0) {
+                        addFallbackConflictMarkers();
+                        return;
+                    }
+
+                    matched.forEach(conflict => {
+                        const marker = L.circleMarker([conflict.lat, conflict.lng], {
+                            radius: 8,
                             fillColor: '#ef4444',
                             color: '#dc2626',
                             weight: 2,
@@ -2974,13 +3010,13 @@
                             fillOpacity: 0.7,
                             className: 'conflict-marker'
                         }).addTo(map);
-                        const popupContent = url
-                            ? `<strong>⚠️ 분쟁/위기</strong><br/><span style="font-size:11px">${name.substring(0,80)}</span><br/><a href="${url}" target="_blank" style="font-size:10px;color:#60a5fa">기사보기 ↗</a>`
-                            : `<strong>⚠️ 분쟁/위기</strong><br/><span style="font-size:11px">${name.substring(0,80)}</span>`;
-                        marker.bindPopup(popupContent);
+                        const popup = conflict.url
+                            ? `<strong>⚠️ ${conflict.name}</strong><br/><span style="font-size:11px">${conflict.title.substring(0,70)}</span><br/><span style="font-size:10px;color:#9ca3af">${conflict.source}</span><br/><a href="${conflict.url}" target="_blank" style="font-size:10px;color:#60a5fa">기사보기 ↗</a>`
+                            : `<strong>⚠️ ${conflict.name}</strong><br/>활성 분쟁 지역`;
+                        marker.bindPopup(popup);
                         conflictMarkers.push(marker);
                     });
-                    console.log(`[GDELT] ${filtered.length}개 분쟁 마커 로드 완료`);
+                    console.log(`[GDELT] ${matched.size}개 분쟁 지역 마커 로드 (실시간 뉴스 매칭)`);
                 })
                 .catch(err => {
                     console.warn('[GDELT] 분쟁 데이터 로드 실패, 폴백 사용:', err);
