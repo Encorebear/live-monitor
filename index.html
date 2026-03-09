@@ -2570,7 +2570,7 @@
                     <div style="display:flex;align-items:center;">
                         <span class="sdata-rank${rankNum <= 3 ? ' top3' : ''}">${rank}</span>
                         <div style="flex:1;">
-                            <div class="sdata-title">${title}</div>
+                            <div class="sdata-title"><a href="https://www.google.com/search?q=${encodeURIComponent(title + ' 영화')}" target="_blank" style="color:inherit;text-decoration:none;">${title}</a></div>
                             <div class="sdata-meta">개봉 ${releaseDate}${summary ? ' · ' + summary : ''}</div>
                         </div>
                     </div>
@@ -2622,7 +2622,7 @@
                     <div style="display:flex;align-items:center;">
                         <span class="sdata-rank${rankNum <= 3 ? ' top3' : ''}">${rank}</span>
                         <div style="flex:1;">
-                            <div class="sdata-title">${title}</div>
+                            <div class="sdata-title"><a href="https://www.google.com/search?q=${encodeURIComponent(title + ' 드라마')}" target="_blank" style="color:inherit;text-decoration:none;">${title}</a></div>
                             <div class="sdata-meta">${channel}${genre ? ' · ' + genre : ''}${schedule ? ' · ' + schedule : ''}</div>
                         </div>
                         <div style="text-align:right;margin-left:12px;">
@@ -2680,11 +2680,17 @@
             if (headers.length === 0 && rows.length > 0) {
                 headers = (rows[0]?.c || []).map(c => getCellValue(c));
             }
+            // Detect which column is the link column and title column
+            const linkColIdx = headers.findIndex(h => h && (h.toLowerCase() === '링크' || h.toLowerCase() === 'link'));
+            const titleColIdx = headers.findIndex(h => h && (h === '제목' || h === 'title' || h === 'Title'));
             let html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
             html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
             if (headers.some(h => h)) {
                 html += '<thead><tr>';
-                headers.forEach(h => { html += `<th style="padding:8px 10px;text-align:left;border-bottom:2px solid #1e3a8a;color:#60a5fa;font-size:11px;white-space:nowrap;position:sticky;top:0;background:#111820;">${h}</th>`; });
+                headers.forEach((h, idx) => {
+                    if (idx === linkColIdx) return; // Hide link column header
+                    html += `<th style="padding:8px 10px;text-align:left;border-bottom:2px solid #1e3a8a;color:#60a5fa;font-size:11px;white-space:nowrap;position:sticky;top:0;background:#111820;">${h}</th>`;
+                });
                 html += '</tr></thead>';
             }
             html += '<tbody>';
@@ -2694,11 +2700,28 @@
                 if (!cells) continue;
                 const isEmpty = cells.every(c => !getCellValue(c));
                 if (isEmpty) continue;
+                // Get link URL - if it's an emoji/non-URL, generate Google News search from title
+                let rowLink = '';
+                if (linkColIdx >= 0) {
+                    const rawLink = getCellValue(cells[linkColIdx]);
+                    if (rawLink && rawLink.startsWith('http')) {
+                        rowLink = rawLink;
+                    } else if (titleColIdx >= 0) {
+                        const titleVal = getCellValue(cells[titleColIdx]);
+                        if (titleVal) rowLink = `https://www.google.com/search?q=${encodeURIComponent(titleVal)}&tbm=nws`;
+                    }
+                }
                 html += `<tr style="border-bottom:1px solid #1e2a36;">`;
                 for (let j = 0; j < Math.max(cells.length, headers.length); j++) {
+                    if (j === linkColIdx) continue; // Skip link column
                     const val = getCellValue(cells[j]);
                     const isLink = val && (val.startsWith('http') || val.startsWith('www'));
-                    html += `<td style="padding:8px 10px;color:#d1d5db;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis;">${isLink ? `<a href="${val}" target="_blank" style="color:#3b82f6;">🔗</a>` : val}</td>`;
+                    // Make title column clickable with the row link
+                    if (j === titleColIdx && rowLink && val) {
+                        html += `<td style="padding:8px 10px;color:#d1d5db;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="${rowLink}" target="_blank" style="color:#60a5fa;text-decoration:none;">${val}</a></td>`;
+                    } else {
+                        html += `<td style="padding:8px 10px;color:#d1d5db;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis;">${isLink ? `<a href="${val}" target="_blank" style="color:#3b82f6;">🔗</a>` : val}</td>`;
+                    }
                 }
                 html += '</tr>';
             }
