@@ -208,11 +208,11 @@
         }
         .sdata-news-card:hover { border-color: #3b82f6; }
         .sdata-news-title {
-            color: #e0e6ed;
-            font-size: 13px;
+            color: #f0f4f8;
+            font-size: 14px;
             line-height: 1.5;
             margin-bottom: 6px;
-            font-weight: 500;
+            font-weight: 600;
         }
         .sdata-news-title a {
             color: #e0e6ed;
@@ -228,9 +228,16 @@
         }
         .sdata-news-source {
             background: #1e2a36;
-            padding: 2px 6px;
+            padding: 1px 5px;
             border-radius: 3px;
             color: #9ca3af;
+            font-size: 10px;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            vertical-align: middle;
         }
 
         .tabs {
@@ -2247,14 +2254,14 @@
                 <div id="data-sub-casting" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
                     <!-- Sheet tabs -->
                     <div id="casting-sheet-tabs" style="display:flex;gap:0;background:#111820;border-bottom:1px solid #1e2a36;padding:0 8px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;">
-                        <button class="sheet-tab active" onclick="loadSheetTab('casting','박스오피스',this)">박스오피스</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('casting','드라마 시청률',this)">드라마 시청률</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('casting','국내캐스팅',this)">국내캐스팅</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('casting','국내제작',this)">국내제작</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('casting','해외제작',this)">해외제작</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('casting','해외캐스팅',this)">해외캐스팅</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('casting','오늘',this)">오늘</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('casting','최근7일',this)">최근7일</button>
+                        <button class="sheet-tab active" onclick="loadSheetTab('casting','박스오피스','250578731',this)">박스오피스</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','드라마 시청률','1252338631',this)">드라마 시청률</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','국내캐스팅','1855464041',this)">국내캐스팅</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','국내제작','1479927348',this)">국내제작</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','해외제작','1810172997',this)">해외제작</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','해외캐스팅','1606240600',this)">해외캐스팅</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','오늘',null,this)">오늘</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','최근7일',null,this)">최근7일</button>
                     </div>
                     <div id="casting-data" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:10px;-webkit-overflow-scrolling:touch;"></div>
                 </div>
@@ -2262,12 +2269,12 @@
                 <!-- 정보검색 sub-tab -->
                 <div id="data-sub-news" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
                     <div id="news-sheet-tabs" style="display:flex;gap:0;background:#111820;border-bottom:1px solid #1e2a36;padding:0 8px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;">
-                        <button class="sheet-tab active" onclick="loadSheetTab('news','이민호',this)">이민호</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('news','임수정',this)">임수정</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('news','김민',this)">김민</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('news','강민지',this)">강민지</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('news','문우진',this)">문우진</button>
-                        <button class="sheet-tab" onclick="loadSheetTab('news','요약',this)">요약</button>
+                        <button class="sheet-tab active" onclick="loadSheetTab('news','이민호',null,this)">이민호</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','임수정',null,this)">임수정</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','김민',null,this)">김민</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','강민지',null,this)">강민지</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','문우진',null,this)">문우진</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','요약',null,this)">요약</button>
                     </div>
                     <div id="news-data" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:10px;-webkit-overflow-scrolling:touch;"></div>
                 </div>
@@ -2475,19 +2482,21 @@
             }
         }
 
-        function loadSheetTab(category, sheetName, btnEl) {
+        function loadSheetTab(category, sheetName, gid, btnEl) {
             // Update tab buttons
             const tabBar = btnEl.parentElement;
             tabBar.querySelectorAll('.sheet-tab').forEach(b => b.classList.remove('active'));
             btnEl.classList.add('active');
             const containerId = category === 'casting' ? 'casting-data' : 'news-data';
-            fetchAndRenderSheet(SHEET_IDS[category], sheetName, containerId, category);
+            fetchAndRenderSheet(SHEET_IDS[category], sheetName, gid, containerId, category);
         }
 
-        function fetchAndRenderSheet(sheetId, sheetName, containerId, category) {
+        function fetchAndRenderSheet(sheetId, sheetName, gid, containerId, category) {
             const container = document.getElementById(containerId);
             container.innerHTML = '<div class="sdata-loading">📡 데이터 불러오는 중...</div>';
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+            // Use gid if available, otherwise use sheet name
+            const param = gid ? `gid=${gid}` : `sheet=${encodeURIComponent(sheetName)}`;
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&${param}`;
             fetch(url)
                 .then(r => r.text())
                 .then(text => {
@@ -2498,6 +2507,8 @@
                     const table = data.table;
                     if (category === 'casting' && sheetName === '박스오피스') {
                         renderBoxOffice(table, container);
+                    } else if (category === 'casting' && sheetName === '드라마 시청률') {
+                        renderDramaRatings(table, container);
                     } else if (category === 'news' && sheetName !== '요약') {
                         renderNewsSearch(table, container, sheetName);
                     } else {
@@ -2518,10 +2529,20 @@
             const cols = table.cols.map(c => c.label || '');
             const rows = table.rows || [];
             let html = '';
-            // Find header info from first merged row
+            // Parse and clean header
             const headerText = cols[0] || '';
             if (headerText.includes('박스오피스')) {
-                html += `<div class="sdata-header-info"><h3>🎬 ${headerText.replace(/순위$/, '').trim()}</h3></div>`;
+                // Extract parts: title, date, update time
+                const titleMatch = headerText.match(/(.*TOP\s*10)/);
+                const dateMatch = headerText.match(/기준일[:\s]*([^\s|]+)/);
+                const updateMatch = headerText.match(/업데이트[:\s]*([^\s]+\s+[^\s]+)/);
+                const title = titleMatch ? titleMatch[1].replace(/🇰🇷\s*/, '') : '한국 박스오피스 TOP 10';
+                const dateStr = dateMatch ? dateMatch[1].replace(/년|월/g, '.').replace(/일/, '') : '';
+                const updateStr = updateMatch ? updateMatch[1] : '';
+                html += `<div class="sdata-header-info">
+                    <h3>🎬 ${title}</h3>
+                    <p>${dateStr ? '📅 ' + dateStr : ''}${updateStr ? ' · 🔄 ' + updateStr : ''}</p>
+                </div>`;
             }
             // Find the actual header row (순위, 영화명, etc.)
             let headerRow = -1;
@@ -2575,6 +2596,46 @@
             container.innerHTML = html;
         }
 
+        function renderDramaRatings(table, container) {
+            const cols = table.cols.map(c => c.label || '');
+            const rows = table.rows || [];
+            let html = '';
+            const headerText = cols[0] || '';
+            const updateMatch = headerText.match(/업데이트[:\s]*([^\s|]+\s+[^\s|]+)/);
+            const updateStr = updateMatch ? updateMatch[1] : '';
+            html += `<div class="sdata-header-info">
+                <h3>📺 드라마 시청률 TOP 10</h3>
+                <p>닐슨코리아 주간 순위${updateStr ? ' · 🔄 ' + updateStr : ''}</p>
+            </div>`;
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i]?.c;
+                if (!cells) continue;
+                const rank = getCellValue(cells[0]);
+                const title = getCellValue(cells[1]);
+                if (!rank || !title || isNaN(rank)) continue;
+                const channel = getCellValue(cells[2]);
+                const rating = getCellValue(cells[3]);
+                const genre = getCellValue(cells[4]);
+                const schedule = getCellValue(cells[5]);
+                const rankNum = parseInt(rank);
+                html += `<div class="sdata-card">
+                    <div style="display:flex;align-items:center;">
+                        <span class="sdata-rank${rankNum <= 3 ? ' top3' : ''}">${rank}</span>
+                        <div style="flex:1;">
+                            <div class="sdata-title">${title}</div>
+                            <div class="sdata-meta">${channel}${genre ? ' · ' + genre : ''}${schedule ? ' · ' + schedule : ''}</div>
+                        </div>
+                        <div style="text-align:right;margin-left:12px;">
+                            <div style="font-size:10px;color:#6b7280;">시청률</div>
+                            <div style="font-size:18px;color:#f59e0b;font-weight:700;">${rating}%</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            if (!html.includes('sdata-card')) html += '<div class="sdata-loading">데이터가 없습니다</div>';
+            container.innerHTML = html;
+        }
+
         function renderNewsSearch(table, container, personName) {
             const rows = table.rows || [];
             let html = `<div class="sdata-header-info"><h3>🔍 ${personName} 뉴스 모니터링</h3><p>${rows.length}건의 기사</p></div>`;
@@ -2595,11 +2656,13 @@
                 const title = getCellValue(cells[2]);
                 const link = getCellValue(cells[3]);
                 if (!title) continue;
+                // Shorten date to just MM-DD HH:MM
+                const shortDate = dateStr.replace(/^\d{4}-/, '');
                 html += `<div class="sdata-news-card">
                     <div class="sdata-news-title">${link ? `<a href="${link}" target="_blank">${title}</a>` : title}</div>
                     <div class="sdata-news-meta">
                         ${source ? `<span class="sdata-news-source">${source}</span>` : ''}
-                        <span>${dateStr}</span>
+                        <span>${shortDate}</span>
                     </div>
                 </div>`;
             }
