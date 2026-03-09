@@ -3470,9 +3470,9 @@
                 });
         }
 
-        // Load real-time conflict/world news via RSS
+        // Load real-time conflict/world news via Korean RSS
         function loadSimulatedConflicts() {
-            const feedUrl = 'https://feeds.bbci.co.uk/news/world/rss.xml';
+            const feedUrl = 'https://www.yonhapnewstv.co.kr/browse/feed/';
             const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
             fetch(apiUrl)
                 .then(res => res.json())
@@ -3483,30 +3483,29 @@
                         feed.innerHTML = '<div class="feed-item" style="color:#6b7280;font-size:12px;">분쟁 데이터를 불러올 수 없습니다</div>';
                         return;
                     }
-                    // Filter for conflict/crisis related keywords
-                    const conflictKeywords = ['war', 'conflict', 'attack', 'military', 'strike', 'bomb', 'missile', 'troops', 'killed', 'crisis', 'battle', 'fighting', 'ukraine', 'gaza', 'iran', 'israel', 'syria', 'yemen', 'sudan', 'myanmar', 'weapons', 'nuclear', 'sanctions', 'invasion', 'ceasefire', 'hostage', 'terror', 'coup', 'protest'];
+                    // 분쟁/위기 관련 한국어 키워드 필터
+                    const conflictKeywords = ['전쟁', '분쟁', '공격', '군사', '미사일', '폭격', '사망', '위기', '전투', '교전', '우크라이나', '가자', '이란', '이스라엘', '시리아', '예멘', '수단', '미얀마', '핵', '제재', '침공', '휴전', '테러', '쿠데타', '시위', '긴장', '도발', '북한', '중국', '러시아', '레바논', 'war', 'attack', 'military', 'missile', 'iran', 'ukraine', 'gaza', 'strike'];
                     const conflictItems = data.items.filter(item => {
                         const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
                         return conflictKeywords.some(kw => text.includes(kw));
                     });
-                    // Use conflict items if found, otherwise show top world news
-                    const displayItems = conflictItems.length >= 3 ? conflictItems.slice(0, 8) : data.items.slice(0, 8);
+                    const displayItems = conflictItems.length >= 2 ? conflictItems.slice(0, 8) : data.items.slice(0, 8);
 
                     displayItems.forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'feed-item';
                         const pubDate = item.pubDate ? new Date(item.pubDate).toLocaleString('ko-KR', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
-                        const title = (item.title || '').substring(0, 60);
+                        const title = (item.title || '').substring(0, 55);
                         const isConflict = conflictKeywords.some(kw => ((item.title||'')+(item.description||'')).toLowerCase().includes(kw));
                         const icon = isConflict ? '⚠️' : '🌍';
                         div.innerHTML = `
                             <div class="feed-item-location" style="cursor:pointer;" onclick="window.open('${item.link}','_blank')">${icon} ${title}</div>
-                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">BBC News · ${pubDate}</div>
+                            <div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">연합뉴스 · ${pubDate}</div>
                         `;
                         feed.appendChild(div);
                     });
                     lastConflicts = displayItems;
-                    console.log(`[RSS] ${displayItems.length}개 분쟁/세계 뉴스 로드 완료`);
+                    console.log(`[RSS] ${displayItems.length}개 분쟁/세계 뉴스 로드 완료 (한국어)`);
                 })
                 .catch(err => {
                     console.warn('[RSS] 분쟁 뉴스 로드 실패:', err);
@@ -3779,10 +3778,15 @@
                 .catch(error => console.error('Hacker News 로드 실패:', error));
         }
 
-        // Generate AI briefing from real news RSS
+        // Generate AI briefing from Korean news RSS
         function generateBriefing() {
-            const feedUrl = 'https://feeds.bbci.co.uk/news/world/rss.xml';
-            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
+            // 한국어 뉴스 소스: 연합뉴스TV, 조선일보
+            const feeds = [
+                { url: 'https://www.yonhapnewstv.co.kr/browse/feed/', name: '연합뉴스' },
+                { url: 'https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml', name: '조선일보' }
+            ];
+            const selected = feeds[Math.floor(Math.random() * feeds.length)];
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(selected.url)}`;
 
             fetch(apiUrl)
                 .then(res => res.json())
@@ -3793,11 +3797,11 @@
                         return;
                     }
                     const headlines = data.items.slice(0, 5).map(item => `• ${item.title || ''}`);
-                    const source = data.feed ? data.feed.title : 'BBC';
+                    const source = selected.name;
                     const now = new Date().toLocaleString('ko-KR', {hour:'2-digit', minute:'2-digit'});
-                    box.innerHTML = `<div style="font-size:11px;color:#60a5fa;margin-bottom:6px;">📡 실시간 뉴스 브리핑 (${source} · ${now})</div>` +
-                        headlines.map(h => `<div style="margin-bottom:4px;font-size:12px;line-height:1.4;">${h}</div>`).join('');
-                    console.log(`[RSS] 뉴스 브리핑 로드 완료: ${source}`);
+                    box.innerHTML = `<div style="font-size:11px;color:#60a5fa;margin-bottom:8px;">📡 실시간 뉴스 브리핑 (${source} · ${now})</div>` +
+                        headlines.map(h => `<div style="margin-bottom:5px;font-size:13px;line-height:1.5;">${h}</div>`).join('');
+                    console.log(`[RSS] 한국어 뉴스 브리핑 로드 완료: ${source}`);
                 })
                 .catch(err => {
                     console.warn('[RSS] 뉴스 브리핑 로드 실패:', err);
@@ -4103,7 +4107,13 @@
                         renderIncidents(window._itsEventCache.data, window._itsEventCache.total, false);
                         return;
                     }
-                    renderIncidents([], 0, false);
+                    const feed = document.getElementById('traffic-incident-feed');
+                    if (error.message === 'QUOTA_EXCEEDED') {
+                        feed.innerHTML = '<div class="traffic-incident-empty" style="color:#f59e0b;">⚠️ ITS API 일일 호출 제한 초과<br/><span style="font-size:11px;color:#6b7280;">자정 이후 자동 복구됩니다</span></div>';
+                    } else {
+                        feed.innerHTML = '<div class="traffic-incident-empty">돌발정보를 불러올 수 없습니다<br/><span style="font-size:11px;color:#6b7280;">ITS API 연결 실패</span></div>';
+                    }
+                    document.getElementById('traffic-incident-count').textContent = '0';
                 });
         }
 
@@ -4204,7 +4214,12 @@
                         renderSpeeds(window._itsSpeedCache.data, false);
                         return;
                     }
-                    renderSpeeds([], false);
+                    const table = document.getElementById('traffic-speed-table');
+                    if (error.message === 'QUOTA_EXCEEDED') {
+                        table.innerHTML = '<div class="traffic-speed-empty" style="color:#f59e0b;">⚠️ ITS API 일일 호출 제한 초과<br/><span style="font-size:11px;color:#6b7280;">자정 이후 자동 복구됩니다</span></div>';
+                    } else {
+                        table.innerHTML = '<div class="traffic-speed-empty">속도 데이터를 불러올 수 없습니다</div>';
+                    }
                 });
         }
 
