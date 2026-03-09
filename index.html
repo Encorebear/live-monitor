@@ -97,7 +97,141 @@
             }
         }
 
-        /* DEFCON badge removed */
+        /* Sheet tab buttons */
+        .sheet-tab {
+            padding: 8px 14px;
+            background: transparent;
+            color: #6b7280;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .sheet-tab:hover { color: #9ca3af; }
+        .sheet-tab.active {
+            color: #60a5fa;
+            border-bottom-color: #3b82f6;
+            font-weight: 600;
+        }
+
+        /* Data cards for mobile-friendly rendering */
+        .sdata-card {
+            background: #111820;
+            border: 1px solid #1e2a36;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        .sdata-card:nth-child(1) {
+            background: linear-gradient(135deg, #1e3a5f, #111820);
+            border-color: #2563eb;
+        }
+        .sdata-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 3px 0;
+            gap: 8px;
+        }
+        .sdata-label {
+            color: #6b7280;
+            font-size: 11px;
+            flex-shrink: 0;
+            min-width: 60px;
+        }
+        .sdata-value {
+            color: #e0e6ed;
+            font-size: 13px;
+            text-align: right;
+            word-break: break-word;
+        }
+        .sdata-title {
+            color: #f0f4f8;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        .sdata-meta {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .sdata-rank {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #1e3a8a;
+            color: #60a5fa;
+            font-weight: 700;
+            font-size: 13px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .sdata-rank.top3 { background: #92400e; color: #fbbf24; }
+        .sdata-loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .sdata-header-info {
+            background: linear-gradient(135deg, #1e3a8a20, #0d111720);
+            border: 1px solid #1e2a36;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .sdata-header-info h3 {
+            color: #e0e6ed;
+            font-size: 15px;
+            margin: 0 0 4px 0;
+        }
+        .sdata-header-info p {
+            color: #6b7280;
+            font-size: 11px;
+            margin: 0;
+        }
+        .sdata-news-card {
+            background: #111820;
+            border: 1px solid #1e2a36;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: border-color 0.2s;
+        }
+        .sdata-news-card:hover { border-color: #3b82f6; }
+        .sdata-news-title {
+            color: #e0e6ed;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .sdata-news-title a {
+            color: #e0e6ed;
+            text-decoration: none;
+        }
+        .sdata-news-title a:hover { color: #60a5fa; }
+        .sdata-news-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+            color: #6b7280;
+            flex-wrap: wrap;
+        }
+        .sdata-news-source {
+            background: #1e2a36;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #9ca3af;
+        }
 
         .tabs {
             display: flex;
@@ -2099,25 +2233,43 @@
                 <!-- (Traffic info links are now integrated into the traffic dashboard above) -->
             </div>
 
-            <!-- VIEW 4: DATA VIEW (Google Sheets) -->
+            <!-- VIEW 4: DATA VIEW (Google Sheets - native rendering) -->
             <div id="data-view" class="view" style="flex-direction:column;overflow:hidden;">
-                <!-- Sub-tab navigation -->
-                <div style="display:flex;align-items:center;gap:0;background:#0d1117;border-bottom:1px solid #1e2a36;padding:0 12px;flex-shrink:0;">
-                    <button class="data-sub-tab active" onclick="switchDataSub('casting')" style="padding:10px 16px;background:transparent;color:#60a5fa;border:none;border-bottom:2px solid #3b82f6;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;">🎬 캐스팅/박스오피스</button>
-                    <button class="data-sub-tab" onclick="switchDataSub('news')" style="padding:10px 16px;background:transparent;color:#6b7280;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;transition:all 0.2s;">🔍 정보검색</button>
+                <!-- Main sub-tab navigation -->
+                <div style="display:flex;align-items:center;gap:0;background:#0d1117;border-bottom:1px solid #1e2a36;padding:0 8px;flex-shrink:0;overflow-x:auto;">
+                    <button class="data-sub-tab active" onclick="switchDataSub('casting')" style="padding:10px 14px;background:transparent;color:#60a5fa;border:none;border-bottom:2px solid #3b82f6;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">🎬 캐스팅/박스오피스</button>
+                    <button class="data-sub-tab" onclick="switchDataSub('news')" style="padding:10px 14px;background:transparent;color:#6b7280;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;white-space:nowrap;">🔍 정보검색</button>
                     <div style="flex:1;"></div>
-                    <a id="data-open-external" href="https://docs.google.com/spreadsheets/d/1mueaiZhvvsrVSuT1ykr6oI319_yLokyoM6EBm8ddEdQ/edit?gid=250578731#gid=250578731" target="_blank" style="font-size:11px;color:#6b7280;text-decoration:none;padding:8px;">원본 시트 열기 ↗</a>
+                    <a id="data-open-external" href="https://docs.google.com/spreadsheets/d/1mueaiZhvvsrVSuT1ykr6oI319_yLokyoM6EBm8ddEdQ/edit?gid=250578731#gid=250578731" target="_blank" style="font-size:11px;color:#6b7280;text-decoration:none;padding:8px;white-space:nowrap;">원본 시트 ↗</a>
                 </div>
-                <!-- Sheet embed area -->
-                <div id="data-sub-casting" style="flex:1;display:flex;overflow:hidden;">
-                    <iframe id="sheet-casting-iframe"
-                        src="https://docs.google.com/spreadsheets/d/1mueaiZhvvsrVSuT1ykr6oI319_yLokyoM6EBm8ddEdQ/htmlview?gid=250578731&widget=false"
-                        style="flex:1;border:none;background:#0d1117;" loading="lazy"></iframe>
+
+                <!-- Casting/BoxOffice sub-tab -->
+                <div id="data-sub-casting" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+                    <!-- Sheet tabs -->
+                    <div id="casting-sheet-tabs" style="display:flex;gap:0;background:#111820;border-bottom:1px solid #1e2a36;padding:0 8px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;">
+                        <button class="sheet-tab active" onclick="loadSheetTab('casting','박스오피스',this)">박스오피스</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','드라마 시청률',this)">드라마 시청률</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','국내캐스팅',this)">국내캐스팅</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','국내제작',this)">국내제작</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','해외제작',this)">해외제작</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','해외캐스팅',this)">해외캐스팅</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','오늘',this)">오늘</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('casting','최근7일',this)">최근7일</button>
+                    </div>
+                    <div id="casting-data" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:10px;-webkit-overflow-scrolling:touch;"></div>
                 </div>
-                <div id="data-sub-news" style="flex:1;display:none;overflow:hidden;">
-                    <iframe id="sheet-news-iframe"
-                        src="https://docs.google.com/spreadsheets/d/1ViYEjbOnxeSb3MloN3ocsls702LC-qQXXLRidPBNOBM/htmlview?gid=1263597884&widget=false"
-                        style="flex:1;border:none;background:#0d1117;" loading="lazy"></iframe>
+
+                <!-- 정보검색 sub-tab -->
+                <div id="data-sub-news" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
+                    <div id="news-sheet-tabs" style="display:flex;gap:0;background:#111820;border-bottom:1px solid #1e2a36;padding:0 8px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;">
+                        <button class="sheet-tab active" onclick="loadSheetTab('news','이민호',this)">이민호</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','임수정',this)">임수정</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','김민',this)">김민</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','강민지',this)">강민지</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','문우진',this)">문우진</button>
+                        <button class="sheet-tab" onclick="loadSheetTab('news','요약',this)">요약</button>
+                    </div>
+                    <div id="news-data" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:10px;-webkit-overflow-scrolling:touch;"></div>
                 </div>
             </div>
         </div>
@@ -2280,9 +2432,24 @@
                     }
                 }
             }
+
+            // Auto-load data tab
+            if (view === 'data') {
+                if (!dataTabLoaded.casting) {
+                    const firstTab = document.querySelector('#casting-sheet-tabs .sheet-tab.active');
+                    if (firstTab) firstTab.click();
+                    dataTabLoaded.casting = true;
+                }
+            }
         }
 
-        // Data Sub-tab switching
+        // ===== DATA TAB: Google Sheets native rendering =====
+        const SHEET_IDS = {
+            casting: '1mueaiZhvvsrVSuT1ykr6oI319_yLokyoM6EBm8ddEdQ',
+            news: '1ViYEjbOnxeSb3MloN3ocsls702LC-qQXXLRidPBNOBM'
+        };
+        let dataTabLoaded = { casting: false, news: false };
+
         function switchDataSub(sub) {
             document.querySelectorAll('.data-sub-tab').forEach(el => {
                 el.style.color = '#6b7280';
@@ -2290,20 +2457,188 @@
             });
             document.getElementById('data-sub-casting').style.display = 'none';
             document.getElementById('data-sub-news').style.display = 'none';
-
             document.getElementById(`data-sub-${sub}`).style.display = 'flex';
             const tabs = document.querySelectorAll('.data-sub-tab');
             const idx = sub === 'casting' ? 0 : 1;
             tabs[idx].style.color = '#60a5fa';
             tabs[idx].style.borderBottom = '2px solid #3b82f6';
-
-            // Update external link
+            tabs[idx].style.fontWeight = '600';
             const extLink = document.getElementById('data-open-external');
-            if (sub === 'casting') {
-                extLink.href = 'https://docs.google.com/spreadsheets/d/1mueaiZhvvsrVSuT1ykr6oI319_yLokyoM6EBm8ddEdQ/edit?gid=250578731#gid=250578731';
-            } else {
-                extLink.href = 'https://docs.google.com/spreadsheets/d/1ViYEjbOnxeSb3MloN3ocsls702LC-qQXXLRidPBNOBM/edit?gid=1263597884#gid=1263597884';
+            extLink.href = sub === 'casting'
+                ? 'https://docs.google.com/spreadsheets/d/1mueaiZhvvsrVSuT1ykr6oI319_yLokyoM6EBm8ddEdQ/edit'
+                : 'https://docs.google.com/spreadsheets/d/1ViYEjbOnxeSb3MloN3ocsls702LC-qQXXLRidPBNOBM/edit';
+            // Auto-load first tab data
+            if (!dataTabLoaded[sub]) {
+                const firstTab = document.querySelector(`#${sub === 'casting' ? 'casting' : 'news'}-sheet-tabs .sheet-tab.active`);
+                if (firstTab) firstTab.click();
+                dataTabLoaded[sub] = true;
             }
+        }
+
+        function loadSheetTab(category, sheetName, btnEl) {
+            // Update tab buttons
+            const tabBar = btnEl.parentElement;
+            tabBar.querySelectorAll('.sheet-tab').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            const containerId = category === 'casting' ? 'casting-data' : 'news-data';
+            fetchAndRenderSheet(SHEET_IDS[category], sheetName, containerId, category);
+        }
+
+        function fetchAndRenderSheet(sheetId, sheetName, containerId, category) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<div class="sdata-loading">📡 데이터 불러오는 중...</div>';
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+            fetch(url)
+                .then(r => r.text())
+                .then(text => {
+                    const match = text.match(/setResponse\(([\s\S]+)\)/);
+                    if (!match) throw new Error('Parse error');
+                    const data = JSON.parse(match[1]);
+                    if (data.status !== 'ok') throw new Error(data.errors?.[0]?.message || 'Error');
+                    const table = data.table;
+                    if (category === 'casting' && sheetName === '박스오피스') {
+                        renderBoxOffice(table, container);
+                    } else if (category === 'news' && sheetName !== '요약') {
+                        renderNewsSearch(table, container, sheetName);
+                    } else {
+                        renderGenericTable(table, container);
+                    }
+                })
+                .catch(err => {
+                    container.innerHTML = `<div class="sdata-loading" style="color:#ef4444;">❌ 데이터를 불러올 수 없습니다<br><span style="font-size:12px;color:#6b7280;">${err.message}</span><br><a href="https://docs.google.com/spreadsheets/d/${sheetId}" target="_blank" style="color:#3b82f6;font-size:12px;">시트에서 직접 보기 ↗</a></div>`;
+                });
+        }
+
+        function getCellValue(cell) {
+            if (!cell) return '';
+            return cell.f || (cell.v != null ? String(cell.v) : '');
+        }
+
+        function renderBoxOffice(table, container) {
+            const cols = table.cols.map(c => c.label || '');
+            const rows = table.rows || [];
+            let html = '';
+            // Find header info from first merged row
+            const headerText = cols[0] || '';
+            if (headerText.includes('박스오피스')) {
+                html += `<div class="sdata-header-info"><h3>🎬 ${headerText.replace(/순위$/, '').trim()}</h3></div>`;
+            }
+            // Find the actual header row (순위, 영화명, etc.)
+            let headerRow = -1;
+            for (let i = 0; i < Math.min(5, rows.length); i++) {
+                const v = getCellValue(rows[i]?.c?.[1]);
+                if (v === '영화명' || v === '') continue;
+                if (getCellValue(rows[i]?.c?.[0]) && !isNaN(getCellValue(rows[i]?.c?.[0]))) {
+                    headerRow = i;
+                    break;
+                }
+            }
+            if (headerRow < 0) headerRow = 0;
+            for (let i = headerRow; i < rows.length; i++) {
+                const cells = rows[i]?.c;
+                if (!cells) continue;
+                const rank = getCellValue(cells[0]);
+                const title = getCellValue(cells[1]);
+                if (!rank || !title || isNaN(rank)) continue;
+                const releaseDate = getCellValue(cells[2]);
+                const dailyAudience = getCellValue(cells[3]);
+                const totalAudience = getCellValue(cells[4]);
+                const summary = getCellValue(cells[5]);
+                const rankNum = parseInt(rank);
+                html += `<div class="sdata-card">
+                    <div style="display:flex;align-items:center;">
+                        <span class="sdata-rank${rankNum <= 3 ? ' top3' : ''}">${rank}</span>
+                        <div style="flex:1;">
+                            <div class="sdata-title">${title}</div>
+                            <div class="sdata-meta">개봉 ${releaseDate}${summary ? ' · ' + summary : ''}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid #1e2a36;">
+                        <div style="flex:1;text-align:center;">
+                            <div style="font-size:10px;color:#6b7280;">당일 관객</div>
+                            <div style="font-size:14px;color:#60a5fa;font-weight:600;">${dailyAudience ? Number(dailyAudience.replace(/,/g,'')).toLocaleString() : '-'}</div>
+                        </div>
+                        <div style="flex:1;text-align:center;">
+                            <div style="font-size:10px;color:#6b7280;">누적 관객</div>
+                            <div style="font-size:14px;color:#f0f4f8;font-weight:600;">${totalAudience ? Number(totalAudience.replace(/,/g,'')).toLocaleString() : '-'}</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            if (!html) html = '<div class="sdata-loading">데이터가 없습니다</div>';
+            // Add footer
+            const lastRow = rows[rows.length - 1];
+            const footer = lastRow ? getCellValue(lastRow.c?.[0]) : '';
+            if (footer && footer.includes('출처')) {
+                html += `<div style="text-align:center;font-size:11px;color:#4b5563;padding:12px;">${footer}</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderNewsSearch(table, container, personName) {
+            const rows = table.rows || [];
+            let html = `<div class="sdata-header-info"><h3>🔍 ${personName} 뉴스 모니터링</h3><p>${rows.length}건의 기사</p></div>`;
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i]?.c;
+                if (!cells) continue;
+                // cols: 날짜, 출처, 제목, 링크
+                const dateRaw = cells[0];
+                let dateStr = '';
+                if (dateRaw && dateRaw.f) dateStr = dateRaw.f;
+                else if (dateRaw && dateRaw.v) {
+                    if (typeof dateRaw.v === 'string' && dateRaw.v.startsWith('Date(')) {
+                        const parts = dateRaw.v.match(/Date\((\d+),(\d+),(\d+),?(\d+)?,?(\d+)?\)/);
+                        if (parts) dateStr = `${parts[1]}-${String(Number(parts[2])+1).padStart(2,'0')}-${parts[3].padStart(2,'0')} ${(parts[4]||'0').padStart(2,'0')}:${(parts[5]||'0').padStart(2,'0')}`;
+                    } else dateStr = String(dateRaw.v);
+                }
+                const source = getCellValue(cells[1]);
+                const title = getCellValue(cells[2]);
+                const link = getCellValue(cells[3]);
+                if (!title) continue;
+                html += `<div class="sdata-news-card">
+                    <div class="sdata-news-title">${link ? `<a href="${link}" target="_blank">${title}</a>` : title}</div>
+                    <div class="sdata-news-meta">
+                        ${source ? `<span class="sdata-news-source">${source}</span>` : ''}
+                        <span>${dateStr}</span>
+                    </div>
+                </div>`;
+            }
+            if (rows.length === 0) html += '<div class="sdata-loading">데이터가 없습니다</div>';
+            container.innerHTML = html;
+        }
+
+        function renderGenericTable(table, container) {
+            const cols = table.cols.map(c => c.label || '');
+            const rows = table.rows || [];
+            // Find first non-empty col labels
+            let headers = cols.filter(c => c);
+            if (headers.length === 0 && rows.length > 0) {
+                headers = (rows[0]?.c || []).map(c => getCellValue(c));
+            }
+            let html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
+            html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+            if (headers.some(h => h)) {
+                html += '<thead><tr>';
+                headers.forEach(h => { html += `<th style="padding:8px 10px;text-align:left;border-bottom:2px solid #1e3a8a;color:#60a5fa;font-size:11px;white-space:nowrap;position:sticky;top:0;background:#111820;">${h}</th>`; });
+                html += '</tr></thead>';
+            }
+            html += '<tbody>';
+            const startIdx = (headers.some(h => h) && cols.some(c => c)) ? 0 : 1;
+            for (let i = startIdx; i < rows.length; i++) {
+                const cells = rows[i]?.c;
+                if (!cells) continue;
+                const isEmpty = cells.every(c => !getCellValue(c));
+                if (isEmpty) continue;
+                html += `<tr style="border-bottom:1px solid #1e2a36;">`;
+                for (let j = 0; j < Math.max(cells.length, headers.length); j++) {
+                    const val = getCellValue(cells[j]);
+                    const isLink = val && (val.startsWith('http') || val.startsWith('www'));
+                    html += `<td style="padding:8px 10px;color:#d1d5db;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis;">${isLink ? `<a href="${val}" target="_blank" style="color:#3b82f6;">🔗</a>` : val}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
         }
 
         // CCTV Sub-tab switching
