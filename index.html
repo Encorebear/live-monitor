@@ -1444,6 +1444,7 @@
             .cctv-view {
                 flex-direction: column;
                 overflow: hidden;
+                height: 100% !important;
             }
             .cctv-sub-tabs {
                 padding: 0 8px;
@@ -1465,10 +1466,19 @@
             }
             #its-cctv-grid {
                 grid-template-columns: 1fr !important;
-                grid-auto-rows: minmax(240px, auto) !important;
+                grid-auto-rows: auto !important;
                 padding: 8px !important;
                 gap: 10px !important;
                 overflow-y: auto !important;
+            }
+            #its-cctv-grid > div {
+                max-width: 100% !important;
+                overflow: hidden;
+            }
+            #its-cctv-grid video {
+                width: 100% !important;
+                height: auto !important;
+                max-height: 60vw;
             }
             .cctv-links {
                 padding: 8px;
