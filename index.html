@@ -1391,10 +1391,25 @@
                 font-size: 9px;
             }
 
-            /* NEWS/LIVE VIEW - single column */
+            /* CONTENT - allow scroll on mobile */
+            .content {
+                overflow: auto;
+            }
+            .view {
+                height: auto;
+                min-height: 100%;
+            }
+
+            /* NEWS/LIVE VIEW - single column, large videos */
+            .news-view {
+                flex-direction: column;
+                overflow: hidden;
+                height: 100% !important;
+            }
             .news-header {
                 padding: 8px 12px;
                 gap: 6px;
+                flex-shrink: 0;
             }
             .filter-tab {
                 font-size: 11px;
@@ -1403,13 +1418,20 @@
             .cards-grid {
                 grid-template-columns: 1fr !important;
                 padding: 8px;
-                gap: 10px;
+                gap: 12px;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
             }
             .card-thumbnail {
-                min-height: 180px;
+                min-height: 56vw;
+                aspect-ratio: 16/9;
+            }
+            .card-thumbnail iframe {
+                width: 100% !important;
+                height: 100% !important;
             }
             .card-info {
-                padding: 8px;
+                padding: 8px 10px;
             }
             .card-title {
                 font-size: 13px;
@@ -1418,11 +1440,16 @@
                 font-size: 11px;
             }
 
-            /* CCTV VIEW */
+            /* CCTV VIEW - fix clipping */
+            .cctv-view {
+                flex-direction: column;
+                overflow: hidden;
+            }
             .cctv-sub-tabs {
                 padding: 0 8px;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                flex-shrink: 0;
             }
             .cctv-sub-tab {
                 font-size: 11px;
@@ -1431,6 +1458,17 @@
             }
             .cctv-sub-info {
                 display: none;
+            }
+            .cctv-sub-content.active {
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+            }
+            #its-cctv-grid {
+                grid-template-columns: 1fr !important;
+                grid-auto-rows: minmax(240px, auto) !important;
+                padding: 8px !important;
+                gap: 10px !important;
+                overflow-y: auto !important;
             }
             .cctv-links {
                 padding: 8px;
@@ -1534,7 +1572,10 @@
                 padding: 5px 4px;
             }
             .card-thumbnail {
-                min-height: 150px;
+                min-height: 52vw;
+            }
+            #its-cctv-grid {
+                grid-auto-rows: minmax(200px, auto) !important;
             }
             .traffic-overview-icon {
                 font-size: 18px;
