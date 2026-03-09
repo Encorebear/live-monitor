@@ -3798,6 +3798,8 @@
                     const headlines = data.items.slice(0, 5).map(item => `• ${item.title || ''}`);
                     const source = selected.name;
                     const now = new Date().toLocaleString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+                    box.style.display = 'block';
+                    box.style.textAlign = 'left';
                     box.innerHTML = `<div style="font-size:11px;color:#60a5fa;margin-bottom:8px;">📡 실시간 뉴스 브리핑 (${source} · ${now})</div>` +
                         headlines.map(h => `<div style="margin-bottom:5px;font-size:13px;line-height:1.5;">${h}</div>`).join('');
                     console.log(`[RSS] 한국어 뉴스 브리핑 로드 완료: ${source}`);
