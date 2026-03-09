@@ -2524,6 +2524,10 @@
             if (!cell) return '';
             return cell.f || (cell.v != null ? String(cell.v) : '');
         }
+        // Strip emojis and special markers from text for cleaner search queries
+        function cleanSearchQuery(text) {
+            return text.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1FA00}-\u{1FA9F}\u{200D}]/gu, '').replace(/^\s+/, '').replace(/\[.*?\]$/, '').trim();
+        }
 
         function renderBoxOffice(table, container) {
             const cols = table.cols.map(c => c.label || '');
@@ -2570,7 +2574,7 @@
                     <div style="display:flex;align-items:center;">
                         <span class="sdata-rank${rankNum <= 3 ? ' top3' : ''}">${rank}</span>
                         <div style="flex:1;">
-                            <div class="sdata-title"><a href="https://www.google.com/search?q=${encodeURIComponent(title + ' 영화')}" target="_blank" style="color:inherit;text-decoration:none;">${title}</a></div>
+                            <div class="sdata-title"><a href="https://www.google.com/search?q=${encodeURIComponent(cleanSearchQuery(title) + ' 영화')}" target="_blank" style="color:inherit;text-decoration:none;">${title}</a></div>
                             <div class="sdata-meta">개봉 ${releaseDate}${summary ? ' · ' + summary : ''}</div>
                         </div>
                     </div>
@@ -2622,7 +2626,7 @@
                     <div style="display:flex;align-items:center;">
                         <span class="sdata-rank${rankNum <= 3 ? ' top3' : ''}">${rank}</span>
                         <div style="flex:1;">
-                            <div class="sdata-title"><a href="https://www.google.com/search?q=${encodeURIComponent(title + ' 드라마')}" target="_blank" style="color:inherit;text-decoration:none;">${title}</a></div>
+                            <div class="sdata-title"><a href="https://www.google.com/search?q=${encodeURIComponent(cleanSearchQuery(title) + ' 드라마')}" target="_blank" style="color:inherit;text-decoration:none;">${title}</a></div>
                             <div class="sdata-meta">${channel}${genre ? ' · ' + genre : ''}${schedule ? ' · ' + schedule : ''}</div>
                         </div>
                         <div style="text-align:right;margin-left:12px;">
@@ -2657,7 +2661,7 @@
                 const linkRaw = getCellValue(cells[3]);
                 if (!title) continue;
                 // If link is not a valid URL (e.g. emoji 🔗), generate Google News search link from title
-                const link = (linkRaw && linkRaw.startsWith('http')) ? linkRaw : `https://www.google.com/search?q=${encodeURIComponent(title)}&tbm=nws`;
+                const link = (linkRaw && linkRaw.startsWith('http')) ? linkRaw : `https://www.google.com/search?q=${encodeURIComponent(cleanSearchQuery(title))}&tbm=nws`;
                 // Shorten date to just MM-DD HH:MM
                 const shortDate = dateStr.replace(/^\d{4}-/, '');
                 html += `<div class="sdata-news-card">
@@ -2708,7 +2712,7 @@
                         rowLink = rawLink;
                     } else if (titleColIdx >= 0) {
                         const titleVal = getCellValue(cells[titleColIdx]);
-                        if (titleVal) rowLink = `https://www.google.com/search?q=${encodeURIComponent(titleVal)}&tbm=nws`;
+                        if (titleVal) rowLink = `https://www.google.com/search?q=${encodeURIComponent(cleanSearchQuery(titleVal))}&tbm=nws`;
                     }
                 }
                 html += `<tr style="border-bottom:1px solid #1e2a36;">`;
